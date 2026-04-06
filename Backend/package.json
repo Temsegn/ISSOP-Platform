@@ -1,0 +1,15 @@
+{
+  "name": "issop-backend",
+  "version": "1.0.0",
+  "description": "ISSOP Backend API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --runInBand",
+    "lint": "eslint src/**/*.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
