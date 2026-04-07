@@ -43,9 +43,11 @@ class AuthService {
           'token': data['token'],
         };
       }
-      throw Exception('Registration failed');
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Registration failed';
+      throw Exception(message);
     } catch (e) {
-      rethrow;
+      throw Exception('An unexpected error occurred');
     }
   }
 }

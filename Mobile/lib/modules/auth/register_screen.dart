@@ -29,7 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Registration failed. Try again.'),
+          content: Text(vm.errorMessage ?? 'Registration failed. Try again.'),
           backgroundColor: Colors.redAccent,
         ),
       );

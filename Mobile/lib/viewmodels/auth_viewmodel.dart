@@ -15,8 +15,12 @@ class AuthViewModel extends ChangeNotifier {
   bool _loading = false;
   bool get loading => _loading;
 
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
   Future<bool> login(String email, String password) async {
     _loading = true;
+    _errorMessage = null;
     notifyListeners();
     try {
       final res = await _authService.login(email, password);
@@ -26,6 +30,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
       _loading = false;
       notifyListeners();
       return false;
@@ -34,6 +39,7 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<bool> register(String name, String email, String password, {String? phone}) async {
     _loading = true;
+    _errorMessage = null;
     notifyListeners();
     try {
       final res = await _authService.register(name, email, password, phone: phone);
@@ -43,6 +49,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
       _loading = false;
       notifyListeners();
       return false;
