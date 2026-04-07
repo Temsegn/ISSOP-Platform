@@ -38,11 +38,17 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 50.0),
+          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.location_on_rounded, size: 60, color: Colors.indigo),
+              Center(
+                child: Image.asset(
+                  'assets/images/auth_illustration.png',
+                  height: 250,
+                  fit: BoxFit.contain,
+                ),
+              ),
               const SizedBox(height: 20),
               Text('Welcome Back', style: Theme.of(context).textTheme.headlineMedium),
               const Text('Sign in to continue reporting service issues.', style: TextStyle(color: Colors.grey)),

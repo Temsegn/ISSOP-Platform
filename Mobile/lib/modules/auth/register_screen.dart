@@ -45,10 +45,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Image.asset(
+                  'assets/images/auth_illustration.png',
+                  height: 180,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 10),
               Text('Create Account', style: Theme.of(context).textTheme.headlineMedium),
               const Text('Join ISSOP to improve your city.', style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 30),
