@@ -28,6 +28,8 @@ const authMiddleware = async (req, res, next) => {
         name: true,
         email: true,
         role: true,
+        isActive: true,
+        isDeleted: true,
       },
     });
 
@@ -44,6 +46,14 @@ const authMiddleware = async (req, res, next) => {
         status: 'error',
         statusCode: 401,
         message: 'Not authorized, user is deleted',
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        status: 'error',
+        statusCode: 403,
+        message: 'User account is inactive. Access denied.',
       });
     }
 

@@ -46,6 +46,12 @@ class AuthService {
       throw error;
     }
 
+    if (!user.isActive) {
+      const error = new Error('User account is inactive. Please contact support.');
+      error.statusCode = 403;
+      throw error;
+    }
+
     const token = this.generateToken(user);
 
     // Remove password from response
