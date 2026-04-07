@@ -8,9 +8,9 @@ datasource db {
 }
 
 enum Role {
-  CITIZEN
-  AGENT
   ADMIN
+  AGENT
+  USER
 }
 
 enum RequestStatus {
@@ -32,7 +32,7 @@ model User {
   name          String
   email         String    @unique
   password      String
-  role          Role      @default(CITIZEN)
+  role          Role      @default(USER)
   phone         String?
   isDeleted     Boolean   @default(false)
   createdAt     DateTime  @default(now())
