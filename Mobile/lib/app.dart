@@ -10,10 +10,16 @@ import 'package:issop_mobile/modules/auth/login_screen.dart';
 import 'package:issop_mobile/modules/user/user_home_screen.dart';
 import 'package:issop_mobile/modules/agent/agent_home_screen.dart';
 import 'package:issop_mobile/modules/admin/admin_home_screen.dart';
+import 'package:issop_mobile/modules/onboarding/onboarding_screen.dart';
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
 
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -40,52 +46,103 @@ class App extends StatelessWidget {
           update: (_, svc, vm) => vm ?? RequestViewModel(svc),
         ),
       ],
-      child: MaterialApp(
-        title: 'ISSOP',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.indigo,
-            primary: Colors.indigo,
-            secondary: Colors.deepOrangeAccent,
-          ),
-          textTheme: const TextTheme(
-            headlineMedium: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.indigo, width: 2)),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
+      child: FutureBuilder(
+        future: null, // We'll use the Consumer below to manage state
+        builder: (context, snapshot) {
+          return const AppRoot();
+        },
+      ),
+    );
+  }
+}
+
+class AppRoot extends StatefulWidget {
+  const AppRoot({super.key});
+
+  @override
+  State<AppRoot> createState() => _AppRootState();
+}
+
+class _AppRootState extends State<AppRoot> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => context.read<AuthViewModel>().checkAuth());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'ISSOP',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo,
+          primary: Colors.indigo[900]!,
+          secondary: Colors.blueAccent,
         ),
-        home: Consumer<AuthViewModel>(
-          builder: (context, auth, _) {
-            if (auth.user == null) {
+        textTheme: const TextTheme(
+          headlineMedium: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+      ),
+      home: Consumer<AuthViewModel>(
+        builder: (context, auth, _) {
+          if (!auth.initialized) {
+            return const SplashScreen();
+          }
+
+          if (!auth.onboardingCompleted) {
+            return const OnboardingScreen();
+          }
+
+          if (auth.user == null) {
+            return const LoginScreen();
+          }
+
+          // Role-based routing
+          switch (auth.user!.role) {
+            case 'USER':
+              return const UserHomeScreen();
+            case 'AGENT':
+              return const AgentHomeScreen();
+            case 'ADMIN':
+            case 'SUPERADMIN':
+              return const AdminHomeScreen();
+            default:
               return const LoginScreen();
-            }
-            // Role-based screens
-            switch (auth.user!.role) {
-              case 'USER':
-                return const UserHomeScreen();
-              case 'AGENT':
-                return const AgentHomeScreen();
-              case 'ADMIN':
-              case 'SUPERADMIN':
-                return const AdminHomeScreen();
-              default:
-                return const LoginScreen();
-            }
-          },
+          }
+        },
+      ),
+    );
+  }
+}
+
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.indigo[900],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.location_on_rounded, size: 80, color: Colors.white),
+            const SizedBox(height: 24),
+            const Text(
+              'ISSOP',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const CircularProgressIndicator(color: Colors.white),
+          ],
         ),
       ),
     );

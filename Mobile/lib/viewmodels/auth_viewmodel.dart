@@ -18,6 +18,23 @@ class AuthViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  bool _initialized = false;
+  bool get initialized => _initialized;
+
+  bool _onboardingCompleted = false;
+  bool get onboardingCompleted => _onboardingCompleted;
+
+  Future<void> checkAuth() async {
+    _onboardingCompleted = await _storageService.isOnboardingCompleted();
+    final token = await _storageService.getToken();
+    if (token != null) {
+      // Mock user fetch or actual fetch from API if needed
+      // For now, let the user log in again if expired
+    }
+    _initialized = true;
+    notifyListeners();
+  }
+
   Future<bool> login(String email, String password) async {
     _loading = true;
     _errorMessage = null;
