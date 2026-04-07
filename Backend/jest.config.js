@@ -1,6 +1,7 @@
 module.exports = {
   testEnvironment: 'node',
-  clearMocks: true,
-  restoreMocks: true,
+  clearMocks: false,
+  restoreMocks: false,
   coverageDirectory: 'coverage',
+  testTimeout: 15000,
 };

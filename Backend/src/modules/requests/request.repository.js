@@ -6,7 +6,7 @@ class RequestRepository {
       data: requestData,
       include: {
         citizen: {
-          select: { id: true, name: true, email: true }
+          select: { id: true, name: true, email: true, area: true }
         }
       }
     });

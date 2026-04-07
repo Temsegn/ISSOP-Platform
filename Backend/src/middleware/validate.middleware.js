@@ -7,15 +7,18 @@ const validate = (schema) => (req, res, next) => {
     });
     next();
   } catch (error) {
-    return res.status(400).json({
-      status: 'error',
-      statusCode: 400,
-      message: 'Validation Error',
-      errors: error.errors.map(err => ({
-        field: err.path[1], // Assuming it's in body, query or params
-        message: err.message,
-      })),
-    });
+    if (error.issues) {
+      return res.status(400).json({
+        status: 'error',
+        statusCode: 400,
+        message: 'Validation Error',
+        errors: error.issues.map(err => ({
+          field: err.path[1], // Assuming it's in body, query or params
+          message: err.message,
+        })),
+      });
+    }
+    next(error);
   }
 };
 

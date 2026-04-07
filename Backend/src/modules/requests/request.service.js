@@ -6,7 +6,7 @@ class RequestService {
   async createRequest(citizenId, requestData) {
     const { title, description, category, mediaUrls, latitude, longitude, address } = requestData;
 
-    return await requestRepository.create({
+    const request = await requestRepository.create({
       title,
       description,
       category,
@@ -17,6 +17,11 @@ class RequestService {
       citizenId,
       status: 'PENDING'
     });
+
+    // Notify admins about new request in their area
+    await notificationService.notifyAdminsRequestCreated(request.id, request.title, request.citizen?.area);
+
+    return request;
   }
 
   async getAllRequests(user, query) {

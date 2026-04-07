@@ -1,6 +1,13 @@
-const { mockDeep } = require('jest-mock-extended');
-const prisma = require('../src/config/db');
+const { mockDeep, mockReset } = require('jest-mock-extended');
+const { PrismaClient } = require('@prisma/client');
 
-jest.mock('../src/config/db', () => mockDeep());
+// Create mock BEFORE jest.mock call so it's in scope — use mock prefix to satisfy jest lint rules
+const mockPrisma = mockDeep(PrismaClient);
 
-module.exports = prisma;
+jest.mock('../src/config/db', () => mockPrisma);
+
+beforeEach(() => {
+  mockReset(mockPrisma);
+});
+
+module.exports = mockPrisma;
