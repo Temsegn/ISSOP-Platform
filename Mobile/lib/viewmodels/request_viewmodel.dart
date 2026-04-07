@@ -43,32 +43,42 @@ class RequestViewModel extends ChangeNotifier {
   Position? _currentPosition;
   Position? get currentPosition => _currentPosition;
 
-  Future<void> _syncPendingRequests() async {
+  Future<void> syncPendingRequests() async {
     if (!_initialized) return;
     final json = _prefs.getString('pending_requests');
-    if (json != null) {
+    if (json == null) return;
+
+    try {
       final List pending = jsonDecode(json);
       final List remaining = [];
+      
       for (var data in pending) {
         try {
+          // Robust type conversion for coordinates
+          final double lat = (data['lat'] as num).toDouble();
+          final double lng = (data['lng'] as num).toDouble();
+          
           await _requestService.createRequest(
             title: data['title'],
-            description: data['description'],
+            description: data['description'] ?? '',
             category: data['category'],
-            latitude: data['lat'],
-            longitude: data['lng'],
+            latitude: lat,
+            longitude: lng,
             address: data['address'],
           );
         } catch (e) {
-          remaining.add(data);
+          remaining.add(data); // Keep failing ones for later
         }
       }
+      
       if (remaining.isEmpty) {
         await _prefs.remove('pending_requests');
       } else {
         await _prefs.setString('pending_requests', jsonEncode(remaining));
       }
       notifyListeners();
+    } catch (e) {
+      // ignore JSON parse errors
     }
   }
 
@@ -76,7 +86,7 @@ class RequestViewModel extends ChangeNotifier {
     _loading = true;
     notifyListeners();
     try {
-      await _syncPendingRequests();
+      await syncPendingRequests();
       _requests = await _requestService.getMyRequests();
     } catch (e) {
       // Offline, keep existing _requests

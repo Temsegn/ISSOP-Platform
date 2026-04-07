@@ -16,6 +16,7 @@ class CreateRequestScreen extends StatefulWidget {
 class _CreateRequestScreenState extends State<CreateRequestScreen> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
+  final _addressController = TextEditingController();
   String _selectedCategory = 'Road Issues';
   final List<File> _selectedFiles = [];
   LatLng _selectedLocation = const LatLng(0, 0);
@@ -66,6 +67,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       setState(() {
         _selectedLocation = result['location'];
         _selectedAddress = result['address'];
+        _addressController.text = _selectedAddress;
       });
     }
   }
@@ -104,7 +106,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       category: _selectedCategory,
       lat: _selectedLocation.latitude,
       lng: _selectedLocation.longitude,
-      address: _selectedAddress,
+      address: _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : _selectedAddress,
       files: _selectedFiles,
     );
     
@@ -167,6 +169,8 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
               _buildSectionTitle('Location'),
               const SizedBox(height: 12),
               _buildLocationCard(),
+              const SizedBox(height: 16),
+              _buildTextField(_addressController, 'Detailed Address / Landmark', Icons.share_location_rounded),
               
               const SizedBox(height: 32),
               _buildSectionTitle('Media Evidence'),

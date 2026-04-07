@@ -70,7 +70,7 @@ class AgentViewModel extends ChangeNotifier {
       final freshTasks = await _agentService.getMyTasks();
       _tasks = freshTasks;
       await _saveCachedTasks();
-      await _syncOfflineUpdates();
+      await syncOfflineUpdates();
     } catch (e) {
       // offline, keep existing cache
     } finally {
@@ -80,42 +80,47 @@ class AgentViewModel extends ChangeNotifier {
   }
   
   // Offline Sync Management with Conflict Resolution
-  Future<void> _syncOfflineUpdates() async {
+  Future<void> syncOfflineUpdates() async {
+    if (!_prefsInitialized) return;
     final offlineUpdatesJson = _prefs.getString('offline_task_updates');
     if (offlineUpdatesJson == null) return;
 
-    final List updates = jsonDecode(offlineUpdatesJson);
-    List remainingUpdates = [];
-    
-    for (var update in updates) {
-      final String requestId = update['requestId'];
-      final String status = update['status'];
-      final String? proofPath = update['proofPath'];
+    try {
+      final List updates = jsonDecode(offlineUpdatesJson);
+      List remainingUpdates = [];
+      
+      for (var update in updates) {
+        final String requestId = update['requestId'];
+        final String status = update['status'];
+        final String? proofPath = update['proofPath'];
 
-      // Conflict Handling: Check if task was already updated on server
-      final currentTask = _tasks.firstWhere((t) => t.id == requestId, orElse: () => RequestModel.fromJson({}));
-      if (currentTask.id != null && _isStatusAdvanced(currentTask.status, status)) {
-        // Server is already at a more advanced status, skip this offline update
-        continue;
-      }
+        // Conflict Handling
+        final currentTask = _tasks.firstWhere((t) => t.id == requestId, orElse: () => RequestModel.fromJson({}));
+        if (currentTask.id != null && _isStatusAdvanced(currentTask.status, status)) {
+          continue;
+        }
 
-      try {
-        await _agentService.updateTaskStatus(
-          requestId, 
-          status,
-          proof: proofPath != null ? File(proofPath) : null,
-        );
-      } catch (e) {
-        remainingUpdates.add(update);
+        try {
+          await _agentService.updateTaskStatus(
+            requestId, 
+            status,
+            proof: proofPath != null ? File(proofPath) : null,
+          );
+        } catch (e) {
+          remainingUpdates.add(update);
+        }
       }
+      
+      if (remainingUpdates.isEmpty) {
+        await _prefs.remove('offline_task_updates');
+      } else {
+        await _prefs.setString('offline_task_updates', jsonEncode(remainingUpdates));
+      }
+      notifyListeners();
+      await fetchTasks();
+    } catch (e) {
+      // ignore
     }
-    
-    if (remainingUpdates.isEmpty) {
-      await _prefs.remove('offline_task_updates');
-    } else {
-      await _prefs.setString('offline_task_updates', jsonEncode(remainingUpdates));
-    }
-    await fetchTasks();
   }
 
   bool _isStatusAdvanced(String current, String offline) {
