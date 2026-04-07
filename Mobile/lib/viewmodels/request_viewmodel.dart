@@ -131,10 +131,17 @@ class RequestViewModel extends ChangeNotifier {
     } catch (e) {
       _loading = false;
       notifyListeners();
-      if (e is DioException && (e.type != DioExceptionType.badResponse || files == null)) {
-         // Offline or network error: cache it!
+      // Detect offline or network-related failures
+      bool isNetworkError = e is DioException && 
+          (e.type == DioExceptionType.connectionTimeout || 
+           e.type == DioExceptionType.sendTimeout || 
+           e.type == DioExceptionType.receiveTimeout ||
+           e.type == DioExceptionType.connectionError ||
+           e.type == DioExceptionType.unknown);
+           
+      if (isNetworkError || (e is DioException && e.response == null)) {
          _queueRequest(title, description, category, lat, lng, address);
-         return 'Report saved as draft! It will upload once you are back online.';
+         return 'DRAFT: Report saved locally! It will sync automatically when you are back online.';
       }
       return e.toString();
     }

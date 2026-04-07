@@ -109,6 +109,15 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   }
 
   Future<void> _onSearch() async {
+    if (_isOffline) {
+       ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Search is unavailable in offline mode.'),
+            behavior: SnackBarBehavior.floating,
+          )
+       );
+       return;
+    }
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
 

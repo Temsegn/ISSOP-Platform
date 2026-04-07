@@ -92,10 +92,6 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       _showError('Please provide a brief title for your request.');
       return;
     }
-    if (_descController.text.trim().isEmpty) {
-      _showError('Please provide a description of the issue.');
-      return;
-    }
     if (_selectedLocation.latitude == 0 && _selectedLocation.longitude == 0) {
       _showError('Please select the location of the issue.');
       return;
@@ -113,16 +109,17 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     );
     
     if (mounted) {
-      if (errorStr == null) {
+      if (errorStr == null || errorStr.startsWith('DRAFT:')) {
+        final isDraft = errorStr?.startsWith('DRAFT:') ?? false;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 8),
-              Expanded(child: Text('Request submitted successfully!')),
+              Icon(isDraft ? Icons.cloud_queue_rounded : Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text(isDraft ? errorStr! : 'Request submitted successfully!')),
             ],
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: isDraft ? Colors.orangeAccent : Colors.green,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ));
