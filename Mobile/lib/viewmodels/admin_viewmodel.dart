@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:issop_mobile/core/models/user_model.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
@@ -55,12 +56,20 @@ class AdminViewModel extends ChangeNotifier {
     }
     
     hasLoc.sort((a, b) {
-      double distA = (a.latitude! - lat) * (a.latitude! - lat) + (a.longitude! - lng) * (a.longitude! - lng);
-      double distB = (b.latitude! - lat) * (b.latitude! - lat) + (b.longitude! - lng) * (b.longitude! - lng);
+      double distA = calculateDistance(lat, lng, a.latitude!, a.longitude!);
+      double distB = calculateDistance(lat, lng, b.latitude!, b.longitude!);
       return distA.compareTo(distB);
     });
     
     return [...hasLoc, ...noLoc];
+  }
+
+  double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    var p = 0.017453292519943295;
+    var a = 0.5 - cos((lat2 - lat1) * p) / 2 +
+        cos(lat1 * p) * cos(lat2 * p) *
+            (1 - cos((lon2 - lon1) * p)) / 2;
+    return 12742 * asin(sqrt(a));
   }
 
   bool _loading = false;
