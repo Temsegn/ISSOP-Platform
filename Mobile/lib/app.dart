@@ -8,6 +8,8 @@ import 'package:issop_mobile/core/services/request_service.dart';
 import 'package:issop_mobile/viewmodels/request_viewmodel.dart';
 import 'package:issop_mobile/core/services/agent_service.dart';
 import 'package:issop_mobile/viewmodels/agent_viewmodel.dart';
+import 'package:issop_mobile/core/services/admin_service.dart';
+import 'package:issop_mobile/viewmodels/admin_viewmodel.dart';
 import 'package:issop_mobile/viewmodels/notification_viewmodel.dart';
 import 'package:issop_mobile/modules/auth/login_screen.dart';
 import 'package:issop_mobile/modules/user/user_home_screen.dart';
@@ -40,6 +42,9 @@ class _AppState extends State<App> {
         ProxyProvider<NetworkService, AgentService>(
           update: (_, network, __) => AgentService(network),
         ),
+        ProxyProvider<NetworkService, AdminService>(
+          update: (_, network, __) => AdminService(network),
+        ),
         ChangeNotifierProxyProvider2<AuthService, StorageService, AuthViewModel>(
           create: (context) => AuthViewModel(
             context.read<AuthService>(),
@@ -54,6 +59,10 @@ class _AppState extends State<App> {
         ChangeNotifierProxyProvider<AgentService, AgentViewModel>(
           create: (context) => AgentViewModel(context.read<AgentService>()),
           update: (_, svc, vm) => vm ?? AgentViewModel(svc),
+        ),
+        ChangeNotifierProxyProvider<AdminService, AdminViewModel>(
+          create: (context) => AdminViewModel(context.read<AdminService>()),
+          update: (_, svc, vm) => vm ?? AdminViewModel(svc),
         ),
         ChangeNotifierProxyProvider<NetworkService, NotificationViewModel>(
           create: (context) => NotificationViewModel(context.read<NetworkService>()),

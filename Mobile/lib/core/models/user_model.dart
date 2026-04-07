@@ -6,6 +6,8 @@ class UserModel {
   final String? phone;
   final String? area;
   final bool? isActive;
+  final double? latitude;
+  final double? longitude;
 
   UserModel({
     required this.id,
@@ -15,6 +17,8 @@ class UserModel {
     this.phone,
     this.area,
     this.isActive,
+    this.latitude,
+    this.longitude,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,8 @@ class UserModel {
       phone: json['phone'],
       area: json['area'],
       isActive: json['isActive'],
+      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
+      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
     );
   }
 
@@ -38,6 +44,8 @@ class UserModel {
       'phone': phone,
       'area': area,
       'isActive': isActive,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 }
