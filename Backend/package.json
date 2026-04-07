@@ -32,8 +32,10 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "cross-env": "^10.1.0",
     "eslint": "^10.2.0",
+    "globals": "^17.4.0",
     "jest": "^30.3.0",
     "jest-mock-extended": "^4.0.0",
     "nodemon": "^3.1.14",
