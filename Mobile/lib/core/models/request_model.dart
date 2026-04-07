@@ -9,7 +9,9 @@ class RequestModel {
   final double longitude;
   final String? address;
   final String citizenId;
+  final String? citizenName;
   final String? agentId;
+  final String? agentName;
   final DateTime createdAt;
 
   RequestModel({
@@ -23,7 +25,9 @@ class RequestModel {
     required this.longitude,
     this.address,
     required this.citizenId,
+    this.citizenName,
     this.agentId,
+    this.agentName,
     required this.createdAt,
   });
 
@@ -39,7 +43,9 @@ class RequestModel {
       longitude: (json['longitude'] as num).toDouble(),
       address: json['address'],
       citizenId: json['citizenId'],
+      citizenName: json['citizen'] != null ? json['citizen']['name'] : null,
       agentId: json['agentId'],
+      agentName: json['agent'] != null ? json['agent']['name'] : null,
       createdAt: DateTime.parse(json['createdAt']),
     );
   }
@@ -56,7 +62,9 @@ class RequestModel {
       'longitude': longitude,
       'address': address,
       'citizenId': citizenId,
+      'citizenName': citizenName,
       'agentId': agentId,
+      'agentName': agentName,
       'createdAt': createdAt.toIso8601String(),
     };
   }
