@@ -55,7 +55,8 @@ model Request {
   description String
   category    String
   status      RequestStatus @default(PENDING)
-  mediaUrls   String[]
+  mediaUrls       String[]
+  completionProofUrl String?
   latitude    Float
   longitude   Float
   address     String?
