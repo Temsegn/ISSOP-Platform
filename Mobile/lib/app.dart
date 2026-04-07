@@ -93,15 +93,82 @@ class AppRoot extends StatefulWidget {
 }
 
 class _AppRootState extends State<AppRoot> {
+  final GlobalKey<ScaffoldMessengerState> _messengerKey = GlobalKey<ScaffoldMessengerState>();
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<AuthViewModel>().checkAuth());
+    Future.microtask(() {
+       context.read<AuthViewModel>().checkAuth();
+       _initNotificationListener();
+    });
+  }
+
+  void _initNotificationListener() {
+    context.read<SocketService>().events.listen((event) {
+      String? title;
+      String? message;
+      Color color = Colors.indigo;
+
+      if (event.name == 'task_assigned') {
+        title = 'Task Assigned';
+        message = 'A new field mission has been assigned to you.';
+        color = Colors.blueAccent;
+      } else if (event.name == 'status_updated') {
+        title = 'Status Update';
+        message = 'A report status has changed: ${event.data['newStatus'] ?? ''}';
+        color = Colors.green;
+      } else if (event.name == 'request_created') {
+        title = 'New Report';
+        message = 'A new problem has been reported in your sector.';
+        color = Colors.orangeAccent;
+      }
+
+      if (title != null) {
+        _showInAppNotification(title, message!, color);
+      }
+    });
+  }
+
+  void _showInAppNotification(String title, String message, Color color) {
+    _messengerKey.currentState?.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        content: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A2E),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withOpacity(0.5), width: 1.5),
+            boxShadow: [BoxShadow(color: color.withOpacity(0.2), blurRadius: 20, spreadRadius: 5)],
+          ),
+          child: Row(
+            children: [
+              Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(Icons.notifications_active, color: color, size: 20)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 13)),
+                    Text(message, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: _messengerKey,
       title: 'ISSOP',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
