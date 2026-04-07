@@ -147,59 +147,133 @@ class SplashScreen extends StatelessWidget {
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A1A2E),
-              Color(0xFF16213E),
-              Color(0xFF0F3460),
-            ],
+          color: Color(0xFF0A0E21), // Absolute Dark Navy
+          image: DecorationImage(
+            image: NetworkImage('https://www.transparenttextures.com/patterns/cubes.png'), // Subtle texture
+            opacity: 0.05,
+            repeat: ImageRepeat.repeat,
           ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
-              ),
-              child: const Icon(Icons.location_on_rounded, size: 60, color: Colors.white),
+            // Decorative background glows
+            Positioned(
+              top: -100,
+              right: -100,
+              child: _buildGlow(Colors.indigo.withOpacity(0.2), 300),
             ),
-            const SizedBox(height: 32),
-            const Text(
-              'ISSOP',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 40,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 8,
-              ),
+            Positioned(
+              bottom: -150,
+              left: -100,
+              child: _buildGlow(Colors.blueAccent.withOpacity(0.15), 400),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'SMART CITY PLATFORM',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(height: 60),
-            const SizedBox(
-              width: 40,
-              height: 2,
-              child: LinearProgressIndicator(
-                backgroundColor: Colors.transparent,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
+            
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Modern Abstract Icon
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(seconds: 2),
+                  curve: Curves.elasticOut,
+                  builder: (context, value, child) {
+                    return Transform.scale(
+                      scale: value,
+                      child: child,
+                    );
+                  },
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(35),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4facfe).withOpacity(0.5),
+                          blurRadius: 30,
+                          offset: const Offset(0, 15),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.bolt_rounded, size: 60, color: Colors.white),
+                        // Circular Orbit
+                        Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 48),
+                // Premium Text
+                const Text(
+                  'ISSOP',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 52,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 12,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'REVOLUTIONIZING CITY SERVICES',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 4,
+                  ),
+                ),
+                const SizedBox(height: 80),
+                // Minimal Loading
+                SizedBox(
+                  width: 120,
+                  height: 3,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      backgroundColor: Colors.white.withOpacity(0.05),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4facfe)),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildGlow(Color color, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color,
+            blurRadius: 100,
+            spreadRadius: 50,
+          ),
+        ],
       ),
     );
   }

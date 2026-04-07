@@ -6,7 +6,11 @@ class NetworkService {
   final Dio dio;
   final StorageService _storageService;
 
-  NetworkService(this._storageService) : dio = Dio(BaseOptions(baseUrl: APIConstants.baseUrl)) {
+  NetworkService(this._storageService) : dio = Dio(BaseOptions(
+    baseUrl: APIConstants.baseUrl,
+    connectTimeout: const Duration(seconds: 45),
+    receiveTimeout: const Duration(seconds: 45),
+  )) {
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final token = await _storageService.getToken();

@@ -27,9 +27,14 @@ class AuthViewModel extends ChangeNotifier {
   Future<void> checkAuth() async {
     _onboardingCompleted = await _storageService.isOnboardingCompleted();
     final token = await _storageService.getToken();
+    
     if (token != null) {
-      // Mock user fetch or actual fetch from API if needed
-      // For now, let the user log in again if expired
+      try {
+        final response = await _authService.getProfile(); // Need to implement this in AuthService
+        _user = response;
+      } catch (e) {
+        await _storageService.clear();
+      }
     }
     _initialized = true;
     notifyListeners();

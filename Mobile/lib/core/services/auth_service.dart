@@ -22,8 +22,11 @@ class AuthService {
         };
       }
       throw Exception('Login failed');
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Login failed. Please check your credentials.';
+      throw Exception(message);
     } catch (e) {
-      rethrow;
+      throw Exception('An unexpected error occurred during login');
     }
   }
 
@@ -45,10 +48,25 @@ class AuthService {
       }
       throw Exception('Registration failed');
     } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Registration failed';
+      final message = e.response?.data['message'] ?? 'Registration failed. Check your details.';
       throw Exception(message);
     } catch (e) {
-      throw Exception('An unexpected error occurred');
+      throw Exception('An unexpected error occurred during registration');
+    }
+  }
+
+  Future<UserModel> getProfile() async {
+    try {
+      final response = await _network.dio.get('/auth/me');
+      if (response.statusCode == 200) {
+        return UserModel.fromJson(response.data['data']['user']);
+      }
+      throw Exception('Failed to fetch profile');
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Session expired. Please log in again.';
+      throw Exception(message);
+    } catch (e) {
+      throw Exception('Could not connect to server. Check your internet.');
     }
   }
 }
