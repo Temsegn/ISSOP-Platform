@@ -22,7 +22,7 @@ class RequestViewModel extends ChangeNotifier {
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
     _initialized = true;
-    _syncPendingRequests();
+    syncPendingRequests();
   }
 
   void _initSocket() {
