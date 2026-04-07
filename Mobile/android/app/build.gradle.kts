@@ -8,8 +8,15 @@ plugins {
 
 android {
     namespace = "com.issop.issop_mobile"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = "27.0.12077973"
+
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.core:core:1.15.0")
+            force("androidx.core:core-ktx:1.15.0")
+        }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
