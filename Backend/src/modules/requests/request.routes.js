@@ -5,11 +5,13 @@ const authorize = require('../../middleware/role.middleware');
 const validate = require('../../middleware/validate.middleware');
 const { createRequestSchema, getRequestsQuerySchema } = require('./request.validation');
 
+const { upload } = require('../../config/cloudinary');
+
 const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post('/', validate(createRequestSchema), requestController.createRequest.bind(requestController));
+router.post('/', upload.array('media', 10), validate(createRequestSchema), requestController.createRequest.bind(requestController));
 router.get('/', validate(getRequestsQuerySchema), requestController.getAllRequests.bind(requestController));
 router.get('/:id', requestController.getRequest.bind(requestController));
 

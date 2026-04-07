@@ -9,7 +9,15 @@ class RequestController {
       throw error;
     }
 
-    const request = await requestService.createRequest(req.user.id, req.body);
+    const requestData = {
+      ...req.body,
+      // If files are uploaded via Cloudinary/multer, map their paths (Cloudinary URLs)
+      mediaUrls: req.files && req.files.length > 0 
+        ? req.files.map(file => file.path) 
+        : (req.body.mediaUrls || [])
+    };
+
+    const request = await requestService.createRequest(req.user.id, requestData);
 
     res.status(201).json({
       status: 'success',

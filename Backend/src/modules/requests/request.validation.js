@@ -6,8 +6,8 @@ const createRequestSchema = z.object({
     description: z.string({ required_error: 'Description is required' }).min(10, 'Description must be at least 10 characters'),
     category: z.string({ required_error: 'Category is required' }),
     mediaUrls: z.array(z.string()).optional(),
-    latitude: z.number({ required_error: 'Latitude is required' }),
-    longitude: z.number({ required_error: 'Longitude is required' }),
+    latitude: z.coerce.number({ required_error: 'Latitude is required' }),
+    longitude: z.coerce.number({ required_error: 'Longitude is required' }),
     address: z.string().optional(),
   }),
 });
