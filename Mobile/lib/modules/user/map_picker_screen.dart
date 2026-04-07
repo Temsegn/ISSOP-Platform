@@ -92,10 +92,16 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           'q': query,
           'format': 'json',
           'addressdetails': 1,
-          'limit': 20, // Increased limit for better selection
-          'accept-language': 'en',
+          'limit': 15,
         },
-        options: Options(headers: {'User-Agent': 'ISSOP_Mobile_App_v1.0'})
+        options: Options(
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Referer': 'https://issop.mobile.app',
+          },
+          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        )
       );
       if (response.statusCode == 200 && mounted) {
         final List data = response.data;
