@@ -97,7 +97,15 @@ class _AdminAssignmentMapScreenState extends State<AdminAssignmentMapScreen> {
                 point: LatLng(agent.latitude!, agent.longitude!),
                 child: GestureDetector(
                   onTap: () => _showAgentPopup(agent, adminVm),
-                  child: const Icon(Icons.directions_run_rounded, color: Colors.blueAccent, size: 35),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))]),
+                    child: Container(
+                      decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                      alignment: Alignment.center,
+                      child: const Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
+                    ),
+                  ),
                 ),
               )),
             ],
