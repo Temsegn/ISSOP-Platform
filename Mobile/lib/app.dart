@@ -4,8 +4,10 @@ import 'package:issop_mobile/core/services/auth_service.dart';
 import 'package:issop_mobile/core/services/network_service.dart';
 import 'package:issop_mobile/core/services/storage_service.dart';
 import 'package:issop_mobile/viewmodels/auth_viewmodel.dart';
+import 'package:issop_mobile/core/services/request_service.dart';
+import 'package:issop_mobile/viewmodels/request_viewmodel.dart';
 import 'package:issop_mobile/modules/auth/login_screen.dart';
-import 'package:issop_mobile/modules/citizen/citizen_home_screen.dart';
+import 'package:issop_mobile/modules/user/user_home_screen.dart';
 import 'package:issop_mobile/modules/agent/agent_home_screen.dart';
 import 'package:issop_mobile/modules/admin/admin_home_screen.dart';
 
@@ -23,12 +25,19 @@ class App extends StatelessWidget {
         ProxyProvider<NetworkService, AuthService>(
           update: (_, network, __) => AuthService(network),
         ),
+        ProxyProvider<NetworkService, RequestService>(
+          update: (_, network, __) => RequestService(network),
+        ),
         ChangeNotifierProxyProvider2<AuthService, StorageService, AuthViewModel>(
           create: (context) => AuthViewModel(
             context.read<AuthService>(),
             context.read<StorageService>(),
           ),
           update: (_, authSvc, storage, vm) => vm ?? AuthViewModel(authSvc, storage),
+        ),
+        ChangeNotifierProxyProvider<RequestService, RequestViewModel>(
+          create: (context) => RequestViewModel(context.read<RequestService>()),
+          update: (_, svc, vm) => vm ?? RequestViewModel(svc),
         ),
       ],
       child: MaterialApp(
@@ -67,7 +76,7 @@ class App extends StatelessWidget {
             // Role-based screens
             switch (auth.user!.role) {
               case 'USER':
-                return const CitizenHomeScreen();
+                return const UserHomeScreen();
               case 'AGENT':
                 return const AgentHomeScreen();
               case 'ADMIN':
