@@ -24,42 +24,52 @@ class _AdminAssignmentMapScreenState extends State<AdminAssignmentMapScreen> {
   }
 
   void _showAgentPopup(UserModel agent, AdminViewModel vm) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Icon(Icons.person_pin_circle, color: Colors.blueAccent),
-            const SizedBox(width: 10),
-            Text(agent.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Email: ${agent.email}', style: TextStyle(color: Colors.grey.shade600)),
-            const SizedBox(height: 10),
-            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)), child: const Text('Online & Available', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12))),
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)))),
+            const SizedBox(height: 24),
+            Row(children: [
+               Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle), child: const Text('A', style: TextStyle(color: Colors.green, fontWeight: FontWeight.w900, fontSize: 24))),
+               const SizedBox(width: 16),
+               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                 Text(agent.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+                 Text(agent.email, style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+               ]),
+            ]),
+            const SizedBox(height: 32),
+            const Text('AGENT DETAILS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.blueAccent, letterSpacing: 1.2)),
+            const SizedBox(height: 12),
+            ListTile(leading: const Icon(Icons.phone), title: Text(agent.phone ?? 'No phone listed')),
+            ListTile(leading: const Icon(Icons.my_location), title: Text('Lat: ${agent.latitude}, Lng: ${agent.longitude}')),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await vm.assignTask(widget.request.id, agent.id);
+                  if (context.mounted) {
+                    Navigator.pop(context); // Close sheet
+                    Navigator.pop(context); // Back to detail
+                    Navigator.pop(context); // Back to home
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Dispatched Successfully!'), backgroundColor: Colors.green));
+                  }
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A1A2E), padding: const EdgeInsets.symmetric(vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                child: const Text('ASSIGN TASK NOW', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
-          ElevatedButton(
-            onPressed: () async {
-              await vm.assignTask(widget.request.id, agent.id);
-              if (mounted) {
-                Navigator.pop(context); // Close popup
-                Navigator.pop(context); // Back to detail
-                Navigator.pop(context); // Back to home
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Task assigned successfully!'), backgroundColor: Colors.green));
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A1A2E), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: const Text('ASSIGN TASK', style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
   }

@@ -79,14 +79,41 @@ class AdminRequestDetailScreen extends StatelessWidget {
                         Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.1), shape: BoxShape.circle), child: const Icon(Icons.location_on, color: Colors.redAccent)),
                         const SizedBox(width: 16),
                         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          const Text('Address', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          const Text('Problem Location', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                           const SizedBox(height: 4),
                           Text(request.address ?? 'Unavailable', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                         ])),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 32),
+                  const _SectionHeader(title: 'NEAREST FIELD AGENTS'),
+                  const SizedBox(height: 12),
+                  Consumer<AdminViewModel>(
+                    builder: (context, vm, _) {
+                      final sortedAgents = vm.getAgentsSortedByProximity(request.latitude, request.longitude);
+                      if (sortedAgents.isEmpty) return const Text('No agents identified.');
+                      
+                      return Column(
+                        children: sortedAgents.take(5).map((agent) => Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade100)),
+                          child: ListTile(
+                            leading: Container(
+                               padding: const EdgeInsets.all(8),
+                               decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
+                               child: const Text('A', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                            ),
+                            title: Text(agent.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            subtitle: Text('ID: ${agent.email.split('@').first}', style: const TextStyle(fontSize: 12)),
+                            trailing: Text('AVAILABLE', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w900, fontSize: 10)),
+                            onTap: () => _showAgentProfile(context, agent, vm, request),
+                          ),
+                        )).toList(),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 120),
                 ],
               ),
             ),
@@ -107,10 +134,65 @@ class AdminRequestDetailScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 4
               ),
-              child: const Text('ASSIGN TASK', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.white)),
+              child: const Text('VIEW ON MAP & ASSIGN', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.white)),
             ),
           )
         : null,
+    );
+  }
+
+  void _showAgentProfile(BuildContext context, UserModel agent, AdminViewModel vm, RequestModel request) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)))),
+            const SizedBox(height: 24),
+            Row(children: [
+               Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle), child: const Text('A', style: TextStyle(color: Colors.green, fontWeight: FontWeight.w900, fontSize: 24))),
+               const SizedBox(width: 16),
+               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                 Text(agent.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+                 Text(agent.email, style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+               ]),
+            ]),
+            const SizedBox(height: 32),
+            const Text('CONTACT INFORMATION', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.blueAccent, letterSpacing: 1.2)),
+            const SizedBox(height: 12),
+            ListTile(leading: const Icon(Icons.phone), title: Text(agent.phone ?? 'No phone listed')),
+            const SizedBox(height: 20),
+            const Text('CURRENT LOCATION', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.blueAccent, letterSpacing: 1.2)),
+            const SizedBox(height: 12),
+            Text('Lat: ${agent.latitude}, Lng: ${agent.longitude}', style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text('Near: ${agent.area ?? 'Bole City'} Cluster', style: TextStyle(color: Colors.grey.shade600)),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await vm.assignTask(request.id, agent.id);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mission Dispatched Successfully!'), backgroundColor: Colors.green));
+                  }
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A1A2E), padding: const EdgeInsets.symmetric(vertical: 20), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                child: const Text('CONFIRM ASSIGNMENT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
   }
 
