@@ -89,14 +89,28 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       backgroundColor: const Color(0xFF1A1A2E),
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
-        centerTitle: false,
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
-            const Text('Welcome back,', style: TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.w400)),
-            Text(auth.user?.name ?? 'User', style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w900)),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Welcome back,', style: TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.w400)),
+                Text(auth.user?.name ?? 'User', style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w900)),
+              ],
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.15), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blueAccent.withOpacity(0.3))),
+              child: const Row(
+                children: [
+                  Icon(Icons.radar, color: Colors.blueAccent, size: 10),
+                  SizedBox(width: 4),
+                  Text('ACTIVE TRACKING', style: TextStyle(color: Colors.blueAccent, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                ],
+              ),
+            ),
           ],
         ),
         background: Stack(
@@ -104,7 +118,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             Positioned(
               right: -50,
               top: -50,
-              child: Container(width: 150, height: 150, decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle)),
+              child: _buildGlow(Colors.blueAccent.withOpacity(0.1), 200),
             ),
           ],
         ),
@@ -305,5 +319,22 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       case 'Water & Sanitation': return Icons.water_drop_rounded;
       default: return Icons.report_problem_rounded;
     }
+  }
+
+  Widget _buildGlow(Color color, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color,
+            blurRadius: 100,
+            spreadRadius: 50,
+          ),
+        ],
+      ),
+    );
   }
 }
