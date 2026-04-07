@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -18,6 +20,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
 
+  Timer? _debounce;
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isTyping = false;
+
   @override
   void initState() {
     super.initState();
@@ -27,20 +33,70 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     _getAddress(_selectedLocation);
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _getAddress(LatLng location) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(location.latitude, location.longitude);
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
-        setState(() {
-          _currentAddress = [p.street, p.subLocality, p.locality].where((e) => e != null && e.isNotEmpty).join(', ');
-          if (_currentAddress.isEmpty) _currentAddress = 'Unknown Location';
-        });
+        if (mounted) {
+          setState(() {
+            _currentAddress = [p.name, p.street, p.subLocality, p.locality].where((e) => e != null && e.isNotEmpty).join(', ');
+            if (_currentAddress.isEmpty) _currentAddress = 'Unknown Location';
+          });
+        }
       } else {
-        setState(() => _currentAddress = 'Unknown Location');
+        if (mounted) setState(() => _currentAddress = 'Unknown Location');
       }
     } catch (e) {
-      setState(() => _currentAddress = 'Location details unavailable');
+      if (mounted) setState(() => _currentAddress = 'Location details unavailable');
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isTyping = false;
+      });
+      return;
+    }
+    
+    setState(() => _isTyping = true);
+    _debounce = Timer(const Duration(milliseconds: 600), () {
+      _fetchAutocomplete(query);
+    });
+  }
+
+  Future<void> _fetchAutocomplete(String query) async {
+    try {
+      final dio = Dio();
+      final response = await dio.get(
+        'https://nominatim.openstreetmap.org/search',
+        queryParameters: {
+          'q': query,
+          'format': 'jsonv2',
+          'addressdetails': 1,
+          'limit': 6,
+        },
+        options: Options(headers: {'User-Agent': 'issop_mobile'})
+      );
+      if (response.statusCode == 200 && mounted) {
+        final List data = response.data;
+        setState(() {
+          _searchResults = data.cast<Map<String, dynamic>>();
+          _isTyping = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isTyping = false);
     }
   }
 
@@ -48,12 +104,12 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
 
+    FocusScope.of(context).unfocus();
     setState(() {
       _isSearching = true;
+      _searchResults = [];
       _currentAddress = 'Finding location...';
     });
-
-    FocusScope.of(context).unfocus();
 
     try {
       List<Location> locations = await locationFromAddress(query);
@@ -71,14 +127,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Address not found, please try a different search'),
+          const SnackBar(
+            content: Text('Address not found, please try a different search'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.redAccent,
           )
         );
       }
-      setState(() => _currentAddress = 'Search failed');
+      if (mounted) setState(() => _currentAddress = 'Search failed');
     } finally {
       if (mounted) {
         setState(() => _isSearching = false);
@@ -115,6 +171,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           child: TextField(
             controller: _searchController,
             textInputAction: TextInputAction.search,
+            onChanged: _onSearchChanged,
             decoration: InputDecoration(
               hintText: 'Search for a place...',
               hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
@@ -142,6 +199,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             options: MapOptions(
               initialCenter: _selectedLocation,
               initialZoom: 16.0,
+              maxZoom: 18.0,
               onPositionChanged: (pos, hasGesture) {
                 if (hasGesture && pos.center != null) {
                   setState(() => _selectedLocation = pos.center!);
@@ -155,6 +213,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.issop.app',
+                maxZoom: 19,
               ),
             ],
           ),
@@ -183,6 +242,53 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               ],
             ),
           ),
+          if (_searchResults.isNotEmpty || _isTyping)
+            Positioned(
+              top: 110,
+              left: 20,
+              right: 20,
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 300),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 5))],
+                ),
+                child: _isTyping && _searchResults.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : ListView.separated(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: _searchResults.length,
+                      separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade100),
+                      itemBuilder: (context, index) {
+                        final place = _searchResults[index];
+                        final name = place['display_name'] ?? 'Unknown Place';
+                        return ListTile(
+                          leading: const Icon(Icons.location_city, color: Colors.blueAccent, size: 24),
+                          title: Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500), maxLines: 2, overflow: TextOverflow.ellipsis),
+                          onTap: () {
+                            FocusScope.of(context).unfocus();
+                            setState(() {
+                              _searchResults = [];
+                              _isTyping = false;
+                              _searchController.text = name.split(',').first;
+                              _selectedLocation = LatLng(
+                                double.parse(place['lat'].toString()),
+                                double.parse(place['lon'].toString())
+                              );
+                            });
+                            _mapController.move(_selectedLocation, 17);
+                            _getAddress(_selectedLocation);
+                          },
+                        );
+                      },
+                    ),
+              ),
+            ),
           // Interactive elements below Map
           Positioned(
             bottom: 30,
@@ -218,7 +324,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                             const SizedBox(height: 4),
                             Text(
                               _currentAddress,
-                              style: TextStyle(color: Colors.grey[600], fontSize: 14, height: 1.3),
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.3),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -252,3 +358,4 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     );
   }
 }
+

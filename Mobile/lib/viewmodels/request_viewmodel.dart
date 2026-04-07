@@ -80,7 +80,15 @@ class RequestViewModel extends ChangeNotifier {
       if (e is DioException) {
         if (e.response != null && e.response?.data is Map) {
            final Map data = e.response?.data;
-           return data['message'] ?? 'Server Error: ${e.response?.statusCode}';
+           String errorMsg = data['message'] ?? 'Server Error: ${e.response?.statusCode}';
+           if (data.containsKey('errors') && data['errors'] is List) {
+             final List errors = data['errors'];
+             if (errors.isNotEmpty) {
+                final firstError = errors.first;
+                errorMsg = '${firstError['field']}: ${firstError['message']}';
+             }
+           }
+           return errorMsg;
         }
         return e.message ?? 'Network error';
       }
