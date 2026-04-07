@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "271150847546",
+    "project_id": "issop-238ab",
+    "storage_bucket": "issop-238ab.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:271150847546:android:4063b6442cd75cf9ee0703",
+        "android_client_info": {
+          "package_name": "com.issop.issop_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrNlTYpRNUJYvcWEq9IovVLRNskOyNNAw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
