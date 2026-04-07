@@ -28,7 +28,11 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.3.0",
+    "jest-mock-extended": "^4.0.0",
     "nodemon": "^3.1.14",
-    "prisma": "^6.19.3"
+    "prisma": "^6.19.3",
+    "supertest": "^7.2.2"
   }
 }
