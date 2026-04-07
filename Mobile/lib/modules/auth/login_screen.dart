@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:issop_mobile/viewmodels/auth_viewmodel.dart';
 import 'package:issop_mobile/modules/auth/register_screen.dart';
+import 'package:issop_mobile/core/utils/ui_utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,14 +20,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final vm = context.read<AuthViewModel>();
     final success = await vm.login(_emailController.text, _passController.text);
     if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(vm.errorMessage ?? 'Invalid credentials. Please try again.'),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(20),
-        ),
+      ISSOPAlert.showError(
+        context,
+        'Access Denied',
+        vm.errorMessage ?? 'Please check your credentials and try again.',
       );
     }
   }

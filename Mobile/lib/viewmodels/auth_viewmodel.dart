@@ -3,6 +3,7 @@ import 'package:issop_mobile/core/models/user_model.dart';
 import 'package:issop_mobile/core/services/auth_service.dart';
 import 'package:issop_mobile/core/services/storage_service.dart';
 import 'package:issop_mobile/core/services/socket_service.dart';
+import 'package:issop_mobile/core/utils/ui_utils.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService;
@@ -56,7 +57,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _errorMessage = ErrorMapper.map(e);
       _loading = false;
       notifyListeners();
       return false;
@@ -76,7 +77,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _errorMessage = ErrorMapper.map(e);
       _loading = false;
       notifyListeners();
       return false;
