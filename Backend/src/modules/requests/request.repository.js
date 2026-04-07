@@ -20,6 +20,11 @@ class RequestRepository {
       where.citizenId = user.id;
     }
 
+    // If user is an agent, limit to tasks assigned to them
+    if (user && user.role === 'AGENT') {
+      where.agentId = user.id;
+    }
+
     return await prisma.request.findMany({
       where,
       include: {
