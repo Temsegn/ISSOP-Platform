@@ -6,6 +6,7 @@ import 'package:issop_mobile/viewmodels/admin_viewmodel.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:issop_mobile/core/models/user_model.dart';
 import 'package:issop_mobile/modules/admin/admin_request_detail_screen.dart';
+import 'package:intl/intl.dart';
 
 class AdminOpsMapScreen extends StatefulWidget {
   const AdminOpsMapScreen({super.key});
@@ -32,8 +33,7 @@ class _AdminOpsMapScreenState extends State<AdminOpsMapScreen> {
   Widget build(BuildContext context) {
     final adminVm = context.watch<AdminViewModel>();
     
-    // Default center to first request or city center
-    LatLng center = const LatLng(3.8480, 11.5021); // Yaounde default
+    LatLng center = const LatLng(3.8480, 11.5021);
     if (adminVm.requests.isNotEmpty) {
       center = LatLng(adminVm.requests.first.latitude, adminVm.requests.first.longitude);
     }
@@ -58,10 +58,7 @@ class _AdminOpsMapScreenState extends State<AdminOpsMapScreen> {
         children: [
           FlutterMap(
             mapController: _mapController,
-            options: MapOptions(
-              initialCenter: center,
-              initialZoom: 13,
-            ),
+            options: MapOptions(initialCenter: center, initialZoom: 13),
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -75,12 +72,7 @@ class _AdminOpsMapScreenState extends State<AdminOpsMapScreen> {
               ),
             ],
           ),
-          Positioned(
-            bottom: 30,
-            left: 20,
-            right: 20,
-            child: _buildControls(),
-          ),
+          Positioned(bottom: 30, left: 20, right: 20, child: _buildControls()),
         ],
       ),
     );
@@ -89,18 +81,21 @@ class _AdminOpsMapScreenState extends State<AdminOpsMapScreen> {
   Marker _buildRequestMarker(RequestModel r) {
     return Marker(
       point: LatLng(r.latitude, r.longitude),
-      width: 40,
-      height: 40,
+      width: 55,
+      height: 55,
       child: GestureDetector(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminRequestDetailScreen(request: r))),
+        onTap: () {
+          _mapController.move(LatLng(r.latitude, r.longitude), 15);
+          _showRequestPeek(context, r);
+        },
         child: Container(
           decoration: BoxDecoration(
             color: _getStatusColor(r.status),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4)],
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
           ),
-          child: const Icon(Icons.report_problem, color: Colors.white, size: 20),
+          child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 28),
         ),
       ),
     );
@@ -109,16 +104,16 @@ class _AdminOpsMapScreenState extends State<AdminOpsMapScreen> {
   Marker _buildAgentMarker(UserModel a) {
     return Marker(
       point: LatLng(a.latitude!, a.longitude!),
-      width: 40,
-      height: 40,
+      width: 50,
+      height: 50,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.blueAccent,
+          color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 2),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4)],
+          border: Border.all(color: Colors.blueAccent, width: 3),
+          boxShadow: [BoxShadow(color: Colors.blueAccent.withOpacity(0.3), blurRadius: 12, spreadRadius: 2)],
         ),
-        child: const Icon(Icons.person, color: Colors.white, size: 20),
+        child: const Center(child: Text('A', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w900, fontSize: 16))),
       ),
     );
   }
@@ -149,6 +144,55 @@ class _AdminOpsMapScreenState extends State<AdminOpsMapScreen> {
           Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: active ? const Color(0xFF1A1A2E) : Colors.grey.shade400)),
         ],
       ),
+    );
+  }
+
+  void _showRequestPeek(BuildContext context, RequestModel r) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(32), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 40)]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _buildSimpleStatusChip(r.status),
+                const Spacer(),
+                Text(DateFormat('MMM dd').format(r.createdAt), style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(r.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: Color(0xFF1A1A2E), letterSpacing: -0.5)),
+            const SizedBox(height: 8),
+            Text(r.address ?? 'Analyzing location...', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminRequestDetailScreen(request: r))),
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A1A2E), padding: const EdgeInsets.symmetric(vertical: 18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                    child: const Text('OPEN FULL DETAIL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSimpleStatusChip(String status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: _getStatusColor(status).withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      child: Text(status, style: TextStyle(color: _getStatusColor(status), fontWeight: FontWeight.w900, fontSize: 9, letterSpacing: 1)),
     );
   }
 

@@ -17,7 +17,6 @@ import 'package:issop_mobile/modules/user/user_home_screen.dart';
 import 'package:issop_mobile/modules/agent/agent_home_screen.dart';
 import 'package:issop_mobile/modules/admin/admin_home_screen.dart';
 import 'package:issop_mobile/modules/onboarding/onboarding_screen.dart';
-import 'package:issop_mobile/modules/splash/splash_screen.dart';
 import 'package:issop_mobile/core/services/socket_service.dart';
 
 class App extends StatefulWidget {
@@ -102,7 +101,7 @@ class _AppRootState extends State<AppRoot> {
   void initState() {
     super.initState();
     Future.microtask(() {
-       // Note: auth check is now delegated to the specialized SplashScreen
+       context.read<AuthViewModel>().checkAuth();
        _initNotificationListener();
        _startSyncHeartbeat();
     });
@@ -224,7 +223,7 @@ class _AppRootState extends State<AppRoot> {
       home: Consumer<AuthViewModel>(
         builder: (context, auth, _) {
           if (!auth.initialized) {
-            return const SplashScreen();
+            return const Scaffold(backgroundColor: Color(0xFF030303));
           }
 
           if (!auth.onboardingCompleted) {

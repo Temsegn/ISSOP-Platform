@@ -73,13 +73,29 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateRequestScreen())),
-        backgroundColor: const Color(0xFF1A1A2E),
-        elevation: 10,
-        label: const Text('NEW REPORT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-        icon: const Icon(Icons.add_location_alt_rounded, color: Colors.white),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            FloatingActionButton.extended(
+              heroTag: 'create_report',
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateRequestScreen())),
+              backgroundColor: const Color(0xFF1A1A2E),
+              elevation: 10,
+              label: const Text('NEW REPORT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+              icon: const Icon(Icons.add_location_alt_rounded, color: Colors.white),
+            ),
+            FloatingActionButton(
+              heroTag: 'refresh_user',
+              onPressed: () => requestVM.fetchMyRequests(),
+              backgroundColor: const Color(0xFF1A1A2E),
+              child: const Icon(Icons.refresh, color: Colors.white),
+            ),
+          ],
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 

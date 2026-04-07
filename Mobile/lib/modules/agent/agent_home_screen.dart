@@ -9,6 +9,7 @@ import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:intl/intl.dart';
 import 'package:issop_mobile/modules/sync/sync_center_screen.dart';
 import 'package:issop_mobile/modules/agent/agent_map_screen.dart';
+import 'package:issop_mobile/core/utils/ui_utils.dart';
 
 class AgentHomeScreen extends StatefulWidget {
   const AgentHomeScreen({super.key});
@@ -33,16 +34,15 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
     
     if (pickedFile != null && mounted) {
       final file = File(pickedFile.path);
-      await context.read<AgentViewModel>().updateTaskStatus(task.id, 'COMPLETED', proof: file);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Row(
-            children: [Icon(Icons.check_circle, color: Colors.white), SizedBox(width: 8), Text('Task completed with proof!')],
-          ),
-          backgroundColor: Colors.green.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ));
+      try {
+        await context.read<AgentViewModel>().updateTaskStatus(task.id, 'COMPLETED', proof: file);
+        if (mounted) {
+          ISSOPAlert.showSuccess(context, 'Task Verified', 'Resolution proof has been synchronized with the central cloud.');
+        }
+      } catch (e) {
+        if (mounted) {
+          ISSOPAlert.showError(context, 'Sync Failure', ErrorMapper.map(e));
+        }
       }
     }
   }
@@ -247,33 +247,30 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         toolbarHeight: 80,
-        title: Row(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Hello, ${user?.name?.split(' ').first ?? 'Agent'}', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF1A1A2E), letterSpacing: -0.5)),
-                Row(
-                  children: [
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.2, end: 1.0),
-                      duration: const Duration(seconds: 1),
-                      curve: Curves.easeInOut,
-                      onEnd: () {}, 
-                      builder: (context, value, child) {
-                        return Opacity(
-                          opacity: value,
-                          child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 6),
-                    const Text('LIVE SYNC ACTIVE', style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.w900, letterSpacing: 1)),
-                  ],
-                ),
-              ],
-            ),
-          ],
+        title: Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Hello, ${user?.name?.split(' ').first ?? 'Agent'}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF1A1A2E), letterSpacing: -0.5)),
+              Row(
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.2, end: 1.0),
+                    duration: const Duration(seconds: 1),
+                    curve: Curves.easeInOut,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 6),
+                  const Text('LIVE SYNC ACTIVE', style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                ],
+              ),
+            ],
+          ),
         ),
         actions: [
           Container(
@@ -290,14 +287,6 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
             child: IconButton(
               icon: const Icon(Icons.sync_problem_rounded, color: Colors.orangeAccent),
               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncCenterScreen())),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
-            child: IconButton(
-              icon: const Icon(Icons.refresh, color: Color(0xFF1A1A2E)),
-              onPressed: () => vm.fetchTasks(),
             ),
           ),
           Consumer<NotificationViewModel>(
@@ -468,6 +457,12 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                 ],
               ),
             ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => vm.fetchTasks(),
+        backgroundColor: const Color(0xFF1A1A2E),
+        child: const Icon(Icons.refresh, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 

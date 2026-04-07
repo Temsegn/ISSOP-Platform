@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:issop_mobile/viewmodels/request_viewmodel.dart';
 import 'package:issop_mobile/modules/user/map_picker_screen.dart';
+import 'package:issop_mobile/core/utils/ui_utils.dart';
 
 class CreateRequestScreen extends StatefulWidget {
   const CreateRequestScreen({super.key});
@@ -72,35 +73,18 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     }
   }
 
-  void _showError(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ));
-    }
-  }
-
   void _onSubmit() async {
     if (_titleController.text.trim().isEmpty) {
-      _showError('Please provide a brief title for your request.');
+      ISSOPAlert.showError(context, 'Missing Detail', 'Please provide a brief title for your request.');
       return;
     }
     if (_selectedLocation.latitude == 0 && _selectedLocation.longitude == 0) {
-      _showError('Please select the location of the issue.');
+      ISSOPAlert.showError(context, 'Location Missing', 'Please select the location of the issue on the map.');
       return;
     }
 
     final vm = context.read<RequestViewModel>();
-    final errorStr = await vm.createRequest(
+    final result = await vm.createRequest(
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
       category: _selectedCategory,
@@ -111,23 +95,16 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     );
     
     if (mounted) {
-      if (errorStr == null || errorStr.startsWith('DRAFT:')) {
-        final isDraft = errorStr?.startsWith('DRAFT:') ?? false;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Row(
-            children: [
-              Icon(isDraft ? Icons.cloud_queue_rounded : Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text(isDraft ? errorStr! : 'Request submitted successfully!')),
-            ],
-          ),
-          backgroundColor: isDraft ? Colors.orangeAccent : Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ));
+      if (result == null || result.startsWith('DRAFT:')) {
+        final isDraft = result?.startsWith('DRAFT:') ?? false;
+        if (isDraft) {
+          ISSOPAlert.showError(context, 'Draft Saved', ErrorMapper.map(result!));
+        } else {
+          ISSOPAlert.showSuccess(context, 'Success', 'Your report has been received and prioritized.');
+        }
         Navigator.pop(context);
       } else {
-        _showError('Failed: $errorStr');
+        ISSOPAlert.showError(context, 'Submission Error', ErrorMapper.map(result));
       }
     }
   }
@@ -137,7 +114,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     final loading = context.watch<RequestViewModel>().loading;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FC), // Soft, premium background
+      backgroundColor: const Color(0xFFF4F7FC), 
       appBar: AppBar(
         title: const Text('New Request', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E), letterSpacing: 0.5)),
         backgroundColor: Colors.transparent,

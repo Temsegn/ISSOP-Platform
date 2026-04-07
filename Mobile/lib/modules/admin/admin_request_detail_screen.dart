@@ -4,6 +4,8 @@ import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:issop_mobile/core/models/user_model.dart';
 import 'package:issop_mobile/viewmodels/admin_viewmodel.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:issop_mobile/modules/admin/admin_assignment_map_screen.dart';
 
 class AdminRequestDetailScreen extends StatefulWidget {
@@ -90,6 +92,51 @@ class _AdminRequestDetailScreenState extends State<AdminRequestDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
+                  const _SectionHeader(title: 'MEDIA EVIDENCE'),
+                  const SizedBox(height: 12),
+                  request.mediaUrls.isEmpty 
+                    ? Text('No visual evidence submitted', style: TextStyle(color: Colors.grey.shade400, fontSize: 13, fontStyle: FontStyle.italic))
+                    : GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12),
+                        itemCount: request.mediaUrls.length,
+                        itemBuilder: (context, index) => Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            image: DecorationImage(image: NetworkImage(request.mediaUrls[index]), fit: BoxFit.cover),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)]
+                          ),
+                        ),
+                      ),
+                  const SizedBox(height: 32),
+                  const _SectionHeader(title: 'PRECISE LOCATION'),
+                  const SizedBox(height: 12),
+                  Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: FlutterMap(
+                        options: MapOptions(initialCenter: LatLng(request.latitude, request.longitude), initialZoom: 15),
+                        children: [
+                          TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'com.issop.issop_mobile'),
+                          MarkerLayer(markers: [
+                            Marker(
+                              point: LatLng(request.latitude, request.longitude),
+                              width: 60,
+                              height: 60,
+                              child: const Icon(Icons.location_on, color: Colors.redAccent, size: 40),
+                            ),
+                          ]),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                   const _SectionHeader(title: 'NEAREST FIELD AGENTS'),
                   const SizedBox(height: 12),
                   Consumer<AdminViewModel>(
@@ -102,16 +149,16 @@ class _AdminRequestDetailScreenState extends State<AdminRequestDetailScreen> {
                       return Column(
                         children: sortedAgents.take(5).map((UserModel agent) => Container(
                           margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade100)),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)]),
                           child: ListTile(
                             leading: Container(
-                               padding: const EdgeInsets.all(8),
+                               padding: const EdgeInsets.all(10),
                                decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
-                               child: const Text('A', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                               child: const Text('A', style: TextStyle(color: Colors.green, fontWeight: FontWeight.w900, fontSize: 16)),
                             ),
-                            title: Text(agent.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                            subtitle: Text('ID: ${agent.email.split('@').first}', style: const TextStyle(fontSize: 12)),
-                            trailing: Text('AVAILABLE', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w900, fontSize: 10)),
+                            title: Text(agent.name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF1A1A2E))),
+                            subtitle: Text('Distance: ${vm.calculateDistance(request.latitude, request.longitude, agent.latitude ?? 0, agent.longitude ?? 0).toStringAsFixed(2)} km', style: const TextStyle(fontSize: 12)),
+                            trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                             onTap: () => _showAgentProfile(context, agent, vm, request),
                           ),
                         )).toList(),
