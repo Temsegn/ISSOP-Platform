@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:issop_mobile/viewmodels/request_viewmodel.dart';
+import 'package:issop_mobile/modules/user/map_picker_screen.dart';
 
 class CreateRequestScreen extends StatefulWidget {
   const CreateRequestScreen({super.key});
@@ -19,6 +19,8 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   String _selectedCategory = 'Road Issues';
   final List<File> _selectedFiles = [];
   LatLng _selectedLocation = const LatLng(0, 0);
+  String _selectedAddress = 'No location selected';
+  
   final List<String> _categories = [
     'Road Issues',
     'Waste Management',
@@ -53,6 +55,21 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     }
   }
 
+  void _openMapPicker() async {
+    final result = await Navigator.push(
+      context, 
+      MaterialPageRoute(
+        builder: (_) => MapPickerScreen(initialLocation: _selectedLocation),
+      ),
+    );
+    if (result != null && result is Map<String, dynamic>) {
+      setState(() {
+        _selectedLocation = result['location'];
+        _selectedAddress = result['address'];
+      });
+    }
+  }
+
   void _onSubmit() async {
     final vm = context.read<RequestViewModel>();
     final success = await vm.createRequest(
@@ -61,6 +78,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       category: _selectedCategory,
       lat: _selectedLocation.latitude,
       lng: _selectedLocation.longitude,
+      address: _selectedAddress,
       files: _selectedFiles,
     );
     if (success && mounted) {
@@ -73,54 +91,56 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     final loading = context.watch<RequestViewModel>().loading;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFF),
       appBar: AppBar(
-        title: const Text('Create New Request',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+        title: const Text('New Request', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF1A1A2E), letterSpacing: 1.5)),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Color(0xFF1A1A2E)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Issue Details'),
+            _buildSectionTitle('What is your issue?'),
             const SizedBox(height: 16),
-            _buildTextField(_titleController, 'Title', Icons.title_rounded),
-            const SizedBox(height: 16),
-            _buildTextField(_descController, 'Description', Icons.description_rounded, maxLines: 3),
+            _buildTextField(_titleController, 'Brief Title', Icons.title_rounded),
             const SizedBox(height: 16),
             _buildDropdown(),
+            const SizedBox(height: 16),
+            _buildTextField(_descController, 'Provide detailed information...', Icons.notes_rounded, maxLines: 4),
             
             const SizedBox(height: 32),
-            _buildSectionTitle('Media Attachments'),
+            _buildSectionTitle('Where is this located?'),
+            const SizedBox(height: 16),
+            _buildLocationCard(),
+            
+            const SizedBox(height: 32),
+            _buildSectionTitle('Media Evidence'),
             const SizedBox(height: 16),
             _buildImageGrid(),
             
-            const SizedBox(height: 32),
-            _buildSectionTitle('Location'),
-            const SizedBox(height: 16),
-            _buildMapContainer(),
-            
-            const SizedBox(height: 40),
+            const SizedBox(height: 48),
             loading 
-              ? const Center(child: CircularProgressIndicator(color: Colors.black))
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF1A1A2E)))
               : ElevatedButton(
                   onPressed: _onSubmit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
+                    backgroundColor: const Color(0xFF1A1A2E),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 10,
+                    shadowColor: const Color(0xFF1A1A2E).withOpacity(0.4),
                   ),
                   child: const Center(
-                    child: Text('Submit Report', 
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: Text('SUBMIT REPORT', 
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 2)),
                   ),
                 ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -128,36 +148,83 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black));
+    return Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E), letterSpacing: 0.5));
   }
 
   Widget _buildTextField(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.blueAccent),
-        filled: true,
-        fillColor: Colors.grey[50],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          hintText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF1A1A2E), size: 22),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+          contentPadding: const EdgeInsets.all(20),
+        ),
       ),
     );
   }
 
   Widget _buildDropdown() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.only(left: 20, right: 12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedCategory,
           isExpanded: true,
-          items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+          items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontWeight: FontWeight.w600)))).toList(),
           onChanged: (val) => setState(() => _selectedCategory = val!),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationCard() {
+    return GestureDetector(
+      onTap: _openMapPicker,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF4facfe).withOpacity(0.2), width: 1.5),
+          boxShadow: [BoxShadow(color: const Color(0xFF4facfe).withOpacity(0.05), blurRadius: 15)],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: const Color(0xFF4facfe).withOpacity(0.1), shape: BoxShape.circle),
+              child: const Icon(Icons.location_on_rounded, color: Color(0xFF4facfe), size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Selected Location', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF1A1A2E))),
+                  const SizedBox(height: 4),
+                  Text(_selectedAddress, 
+                    style: TextStyle(color: Colors.grey[600], fontSize: 13, height: 1.4),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+          ],
         ),
       ),
     );
@@ -174,11 +241,18 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
             child: Container(
               width: 100,
               decoration: BoxDecoration(
-                color: Colors.blueAccent.withOpacity(0.1),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.blueAccent, width: 1),
+                border: Border.all(color: Colors.grey[300]!, width: 1, style: BorderStyle.solid),
               ),
-              child: const Icon(Icons.add_a_photo_rounded, color: Colors.blueAccent),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_a_photo_rounded, color: Color(0xFF1A1A2E), size: 28),
+                  SizedBox(height: 4),
+                  Text('Add Photo', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                ],
+              ),
             ),
           ),
           ..._selectedFiles.map((f) => Container(
@@ -189,54 +263,6 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
               image: DecorationImage(image: FileImage(f), fit: BoxFit.cover),
             ),
           )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMapContainer() {
-    return Container(
-      height: 250,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          FlutterMap(
-            options: MapOptions(
-              initialCenter: _selectedLocation,
-              initialZoom: 15,
-              onTap: (tapPosition, latlng) => setState(() => _selectedLocation = latlng),
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.issop.issop_mobile',
-              ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: _selectedLocation,
-                    width: 80,
-                    height: 80,
-                    child: const Icon(Icons.location_on_rounded, color: Colors.red, size: 40),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: FloatingActionButton.small(
-              heroTag: 'gps',
-              onPressed: _initLocation,
-              backgroundColor: Colors.white,
-              child: const Icon(Icons.my_location_rounded, color: Colors.blueAccent),
-            ),
-          ),
         ],
       ),
     );
