@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
   AGENT
   USER
@@ -38,6 +39,7 @@ model User {
   isDeleted     Boolean   @default(false)
   latitude      Float?
   longitude     Float?
+  area          String?
   lastLocationUpdate DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

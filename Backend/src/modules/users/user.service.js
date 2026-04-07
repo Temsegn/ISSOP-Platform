@@ -1,8 +1,24 @@
 const userRepository = require('./user.repository');
 
 class UserService {
-  async getAllUsers() {
-    return await userRepository.findAll();
+  async getAllUsers(currentUser) {
+    const filters = {};
+    
+    // ADMIN can only see users in their own area
+    if (currentUser.role === 'ADMIN') {
+      if (!currentUser.area) {
+        return []; // Admin with no area assigned sees no one
+      }
+      filters.area = currentUser.area;
+    }
+    
+    // SUPERADMIN sees all (filters stay empty)
+    return await userRepository.findAll(filters);
+  }
+
+  async changeRole(userId, newRole) {
+    await this.getUserById(userId);
+    return await userRepository.update(userId, { role: newRole });
   }
 
   async getUserById(id) {

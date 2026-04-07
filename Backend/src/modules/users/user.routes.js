@@ -8,8 +8,11 @@ const router = express.Router();
 // Apply authMiddleware to all user routes
 router.use(authMiddleware);
 
-// Admin-only route to list all users
-router.get('/', authorize('ADMIN'), userController.getAllUsers.bind(userController));
+// Admin/SuperAdmin route to list users (filtered by area for Admin)
+router.get('/', authorize('ADMIN', 'SUPERADMIN'), userController.getAllUsers.bind(userController));
+
+// Route to change user roles (SuperAdmin only)
+router.patch('/:id/role', authorize('SUPERADMIN'), userController.changeRole.bind(userController));
 
 // Route to find nearest agents (Admin/Agent)
 router.get('/nearest-agents', authorize('ADMIN', 'AGENT'), userController.getNearestAgents.bind(userController));

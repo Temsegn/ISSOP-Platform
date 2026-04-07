@@ -1,15 +1,19 @@
 const prisma = require('../../config/db');
 
 class UserRepository {
-  async findAll() {
+  async findAll(filters = {}) {
     return await prisma.user.findMany({
-      where: { isDeleted: false },
+      where: { 
+        ...filters,
+        isDeleted: false 
+      },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
         phone: true,
+        area: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
