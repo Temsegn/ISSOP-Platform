@@ -1,21 +1,32 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:issop_mobile/core/services/request_service.dart';
-import 'package:geolocator/geolocator.dart';
-
 import 'package:issop_mobile/core/services/socket_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 class RequestViewModel extends ChangeNotifier {
   final RequestService _requestService;
   final SocketService _socketService;
+  late SharedPreferences _prefs;
+  bool _initialized = false;
 
   RequestViewModel(this._requestService, this._socketService) {
     _initSocket();
+    _initPrefs();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    _initialized = true;
+    _syncPendingRequests();
   }
 
   void _initSocket() {
+
     _socketService.events.listen((event) {
       if (event.name == 'status_updated') {
         fetchMyRequests();
@@ -32,14 +43,44 @@ class RequestViewModel extends ChangeNotifier {
   Position? _currentPosition;
   Position? get currentPosition => _currentPosition;
 
+  Future<void> _syncPendingRequests() async {
+    if (!_initialized) return;
+    final json = _prefs.getString('pending_requests');
+    if (json != null) {
+      final List pending = jsonDecode(json);
+      final List remaining = [];
+      for (var data in pending) {
+        try {
+          await _requestService.createRequest(
+            title: data['title'],
+            description: data['description'],
+            category: data['category'],
+            latitude: data['lat'],
+            longitude: data['lng'],
+            address: data['address'],
+          );
+        } catch (e) {
+          remaining.add(data);
+        }
+      }
+      if (remaining.isEmpty) {
+        await _prefs.remove('pending_requests');
+      } else {
+        await _prefs.setString('pending_requests', jsonEncode(remaining));
+      }
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchMyRequests() async {
     _loading = true;
     notifyListeners();
     try {
+      await _syncPendingRequests();
       _requests = await _requestService.getMyRequests();
-      _loading = false;
-      notifyListeners();
     } catch (e) {
+      // Offline, keep existing _requests
+    } finally {
       _loading = false;
       notifyListeners();
     }
@@ -86,26 +127,32 @@ class RequestViewModel extends ChangeNotifier {
       await fetchMyRequests();
       _loading = false;
       notifyListeners();
-      return null; // Null means success
+      return null;
     } catch (e) {
       _loading = false;
       notifyListeners();
-      if (e is DioException) {
-        if (e.response != null && e.response?.data is Map) {
-           final Map data = e.response?.data;
-           String errorMsg = data['message'] ?? 'Server Error: ${e.response?.statusCode}';
-           if (data.containsKey('errors') && data['errors'] is List) {
-             final List errors = data['errors'];
-             if (errors.isNotEmpty) {
-                final firstError = errors.first;
-                errorMsg = '${firstError['field']}: ${firstError['message']}';
-             }
-           }
-           return errorMsg;
-        }
-        return e.message ?? 'Network error';
+      if (e is DioException && (e.type != DioExceptionType.badResponse || files == null)) {
+         // Offline or network error: cache it!
+         _queueRequest(title, description, category, lat, lng, address);
+         return 'Report saved as draft! It will upload once you are back online.';
       }
       return e.toString();
     }
+  }
+
+  void _queueRequest(String t, String d, String c, double lat, double lng, String? a) {
+    if (!_initialized) return;
+    final json = _prefs.getString('pending_requests');
+    final List list = json != null ? jsonDecode(json) : [];
+    list.add({
+      'title': t,
+      'description': d,
+      'category': c,
+      'lat': lat,
+      'lng': lng,
+      'address': a,
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+    _prefs.setString('pending_requests', jsonEncode(list));
   }
 }

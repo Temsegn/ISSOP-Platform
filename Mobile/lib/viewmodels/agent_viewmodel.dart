@@ -79,29 +79,48 @@ class AgentViewModel extends ChangeNotifier {
     }
   }
   
-  // Offline Sync Management
+  // Offline Sync Management with Conflict Resolution
   Future<void> _syncOfflineUpdates() async {
     final offlineUpdatesJson = _prefs.getString('offline_task_updates');
-    if (offlineUpdatesJson != null) {
-      final List updates = jsonDecode(offlineUpdatesJson);
-      List remainingUpdates = [];
-      for (var update in updates) {
-         try {
-            await _agentService.updateTaskStatus(
-              update['requestId'], 
-              update['status']
-            );
-         } catch (e) {
-            remainingUpdates.add(update); // keep failed ones
-         }
+    if (offlineUpdatesJson == null) return;
+
+    final List updates = jsonDecode(offlineUpdatesJson);
+    List remainingUpdates = [];
+    
+    for (var update in updates) {
+      final String requestId = update['requestId'];
+      final String status = update['status'];
+      final String? proofPath = update['proofPath'];
+
+      // Conflict Handling: Check if task was already updated on server
+      final currentTask = _tasks.firstWhere((t) => t.id == requestId, orElse: () => RequestModel.fromJson({}));
+      if (currentTask.id != null && _isStatusAdvanced(currentTask.status, status)) {
+        // Server is already at a more advanced status, skip this offline update
+        continue;
       }
-      if (remainingUpdates.isEmpty) {
-         await _prefs.remove('offline_task_updates');
-      } else {
-         await _prefs.setString('offline_task_updates', jsonEncode(remainingUpdates));
+
+      try {
+        await _agentService.updateTaskStatus(
+          requestId, 
+          status,
+          proof: proofPath != null ? File(proofPath) : null,
+        );
+      } catch (e) {
+        remainingUpdates.add(update);
       }
-      await fetchTasks(); // refresh again
     }
+    
+    if (remainingUpdates.isEmpty) {
+      await _prefs.remove('offline_task_updates');
+    } else {
+      await _prefs.setString('offline_task_updates', jsonEncode(remainingUpdates));
+    }
+    await fetchTasks();
+  }
+
+  bool _isStatusAdvanced(String current, String offline) {
+    const order = ['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'];
+    return order.indexOf(current) > order.indexOf(offline);
   }
 
   Future<void> updateTaskStatus(String requestId, String status, {File? proof}) async {
@@ -111,10 +130,9 @@ class AgentViewModel extends ChangeNotifier {
       await _agentService.updateTaskStatus(requestId, status, proof: proof);
       await fetchTasks();
     } catch (e) {
-       // if it's a network error and we are not uploading a file (proof doesn't cache easily)
-       if (e is DioException && proof == null) {
-          _queueOfflineUpdate(requestId, status);
-          // Optimitically update locally
+       if (e is DioException) {
+          _queueOfflineUpdate(requestId, status, proof?.path);
+          // Optimistically update locally
           final idx = _tasks.indexWhere((t) => t.id == requestId);
           if (idx != -1) {
             final RequestModel old = _tasks[idx];
@@ -130,10 +148,16 @@ class AgentViewModel extends ChangeNotifier {
     }
   }
 
-  void _queueOfflineUpdate(String requestId, String status) {
+  void _queueOfflineUpdate(String requestId, String status, String? proofPath) {
+    if (!_prefsInitialized) return;
     final cached = _prefs.getString('offline_task_updates');
     List updates = cached != null ? jsonDecode(cached) : [];
-    updates.add({'requestId': requestId, 'status': status});
+    updates.add({
+      'requestId': requestId, 
+      'status': status,
+      'proofPath': proofPath,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
     _prefs.setString('offline_task_updates', jsonEncode(updates));
   }
 
