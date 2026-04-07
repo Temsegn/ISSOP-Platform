@@ -89,7 +89,7 @@ class RequestService {
     return updatedRequest;
   }
 
-  async updateRequestStatus(requestId, newStatus, currentUser) {
+  async updateRequestStatus(requestId, newStatus, currentUser, completionProofUrl = null) {
     const request = await this.getRequestById(requestId, currentUser);
     const oldStatus = request.status;
 
@@ -108,6 +108,12 @@ class RequestService {
       throw error;
     }
 
+    if (newStatus === 'COMPLETED' && !completionProofUrl && !request.completionProofUrl) {
+      const error = new Error('Completion proof required to mark request as COMPLETED');
+      error.statusCode = 400;
+      throw error;
+    }
+
     // Role checks for transitions
     // Admin/SuperAdmin can change anything
     const isAdmin = currentUser.role === 'ADMIN' || currentUser.role === 'SUPERADMIN';
@@ -119,7 +125,12 @@ class RequestService {
        throw error;
     }
 
-    const updatedRequest = await requestRepository.update(requestId, { status: newStatus });
+    const updateData = { status: newStatus };
+    if (completionProofUrl) {
+      updateData.completionProofUrl = completionProofUrl;
+    }
+
+    const updatedRequest = await requestRepository.update(requestId, updateData);
 
     // Notify citizen about status update
     await notificationService.notifyCitizenStatusUpdated(request.citizenId, requestId, request.title, newStatus);

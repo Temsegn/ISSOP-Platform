@@ -6,6 +6,8 @@ import 'package:issop_mobile/core/services/storage_service.dart';
 import 'package:issop_mobile/viewmodels/auth_viewmodel.dart';
 import 'package:issop_mobile/core/services/request_service.dart';
 import 'package:issop_mobile/viewmodels/request_viewmodel.dart';
+import 'package:issop_mobile/core/services/agent_service.dart';
+import 'package:issop_mobile/viewmodels/agent_viewmodel.dart';
 import 'package:issop_mobile/modules/auth/login_screen.dart';
 import 'package:issop_mobile/modules/user/user_home_screen.dart';
 import 'package:issop_mobile/modules/agent/agent_home_screen.dart';
@@ -34,6 +36,9 @@ class _AppState extends State<App> {
         ProxyProvider<NetworkService, RequestService>(
           update: (_, network, __) => RequestService(network),
         ),
+        ProxyProvider<NetworkService, AgentService>(
+          update: (_, network, __) => AgentService(network),
+        ),
         ChangeNotifierProxyProvider2<AuthService, StorageService, AuthViewModel>(
           create: (context) => AuthViewModel(
             context.read<AuthService>(),
@@ -44,6 +49,10 @@ class _AppState extends State<App> {
         ChangeNotifierProxyProvider<RequestService, RequestViewModel>(
           create: (context) => RequestViewModel(context.read<RequestService>()),
           update: (_, svc, vm) => vm ?? RequestViewModel(svc),
+        ),
+        ChangeNotifierProxyProvider<AgentService, AgentViewModel>(
+          create: (context) => AgentViewModel(context.read<AgentService>()),
+          update: (_, svc, vm) => vm ?? AgentViewModel(svc),
         ),
       ],
       child: FutureBuilder(

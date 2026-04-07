@@ -69,8 +69,15 @@ class RequestController {
   async updateStatus(req, res) {
     const { id } = req.params;
     const { status } = req.body;
+    
+    let completionProofUrl = undefined;
+    if (req.file) {
+      completionProofUrl = req.file.path;
+    } else if (req.body.completionProofUrl) {
+      completionProofUrl = req.body.completionProofUrl;
+    }
 
-    const request = await requestService.updateRequestStatus(id, status, req.user);
+    const request = await requestService.updateRequestStatus(id, status, req.user, completionProofUrl);
 
     res.status(200).json({
       status: 'success',

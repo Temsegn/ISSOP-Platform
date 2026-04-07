@@ -43,4 +43,21 @@ class RequestModel {
       createdAt: DateTime.parse(json['createdAt']),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'category': category,
+      'status': status,
+      'mediaUrls': mediaUrls,
+      'latitude': latitude,
+      'longitude': longitude,
+      'address': address,
+      'citizenId': citizenId,
+      'agentId': agentId,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
 }

@@ -18,7 +18,7 @@ router.get('/:id', requestController.getRequest.bind(requestController));
 // Admin/SuperAdmin - Assign task to agent
 router.patch('/:id/assign', authorize('ADMIN', 'SUPERADMIN'), requestController.assignTask.bind(requestController));
 
-// Admin/SuperAdmin/Agent - Update status
-router.patch('/:id/status', authorize('ADMIN', 'SUPERADMIN', 'AGENT'), requestController.updateStatus.bind(requestController));
+// Admin/SuperAdmin/Agent - Update status (Allow proof upload when marking COMPLETED)
+router.patch('/:id/status', authorize('ADMIN', 'SUPERADMIN', 'AGENT'), upload.single('proof'), requestController.updateStatus.bind(requestController));
 
 module.exports = router;
