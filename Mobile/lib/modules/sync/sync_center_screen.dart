@@ -89,7 +89,12 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
                   ),
                 ),
                 if (_citizenDrafts.isNotEmpty) ...[
-                  const SliverToBoxAdapter(padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12), child: Text('Citizen Missions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      child: Text('Citizen Missions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    ),
+                  ),
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
@@ -107,7 +112,12 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
                   ),
                 ],
                 if (_agentUpdates.isNotEmpty) ...[
-                  const SliverToBoxAdapter(padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12), child: Text('Agent Updates', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      child: Text('Agent Updates', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    ),
+                  ),
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
