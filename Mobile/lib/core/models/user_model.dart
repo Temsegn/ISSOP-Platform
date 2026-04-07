@@ -8,6 +8,7 @@ class UserModel {
   final bool? isActive;
   final double? latitude;
   final double? longitude;
+  final DateTime? lastLocationUpdate;
 
   UserModel({
     required this.id,
@@ -19,6 +20,7 @@ class UserModel {
     this.isActive,
     this.latitude,
     this.longitude,
+    this.lastLocationUpdate,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class UserModel {
       isActive: json['isActive'],
       latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
       longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
+      lastLocationUpdate: json['lastLocationUpdate'] != null ? DateTime.parse(json['lastLocationUpdate']) : null,
     );
   }
 
@@ -46,6 +49,7 @@ class UserModel {
       'isActive': isActive,
       'latitude': latitude,
       'longitude': longitude,
+      'lastLocationUpdate': lastLocationUpdate?.toIso8601String(),
     };
   }
 }
