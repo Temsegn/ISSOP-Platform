@@ -24,7 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
           content: Text(vm.errorMessage ?? 'Invalid credentials. Please try again.'),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(20),
         ),
       );
     }
@@ -35,76 +36,118 @@ class _LoginScreenState extends State<LoginScreen> {
     final loading = context.watch<AuthViewModel>().loading;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+      body: Container(
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF8FAFF), Colors.white],
+          ),
+        ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Image.asset(
-                  'assets/images/auth_illustration.png',
-                  height: 250,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text('Welcome Back', style: Theme.of(context).textTheme.headlineMedium),
-              const Text('Sign in to continue reporting service issues.', style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 50),
-              
-              const Text('Email Address', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  hintText: 'name@email.com',
-                  prefixIcon: Icon(Icons.alternate_email_rounded),
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              const Text('Password', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _passController,
-                obscureText: _obscure,
-                decoration: InputDecoration(
-                  hintText: 'Enter your password',
-                  prefixIcon: const Icon(Icons.lock_person_rounded),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscure = !_obscure),
+                child: Hero(
+                  tag: 'auth_img',
+                  child: Image.asset(
+                    'assets/images/auth_illustration.png',
+                    height: 220,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
-              
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(onPressed: () {}, child: const Text('Forgot Password?')),
-              ),
-              
-              const SizedBox(height: 40),
-              
-              if (loading)
-                const Center(child: CircularProgressIndicator())
-              else
-                ElevatedButton(
-                  onPressed: _onLogin,
-                  child: const Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 48),
+              const Text(
+                'WELCOME BACK',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1A1A2E),
+                  letterSpacing: 2,
                 ),
-                
-              const SizedBox(height: 30),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Sign in to your ISSOP account to continue.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.blueGrey[400],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 40),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF1A1A2E).withOpacity(0.06),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    )
+                  ],
+                ),
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Email Address',
+                        prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF1A1A2E)),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _passController,
+                      obscureText: _obscure,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF1A1A2E)),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 48),
+              loading
+                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF1A1A2E)))
+                  : ElevatedButton(
+                      onPressed: _onLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1A1A2E),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 64),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        elevation: 12,
+                        shadowColor: const Color(0xFF1A1A2E).withOpacity(0.5),
+                      ),
+                      child: const Text(
+                        'LOGIN',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, letterSpacing: 2),
+                      ),
+                    ),
+              const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account?"),
+                  Text("Don't have an account? ", style: TextStyle(color: Colors.blueGrey[400])),
                   TextButton(
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
-                    child: const Text('Register', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'SIGN UP',
+                      style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E)),
+                    ),
                   ),
                 ],
               ),

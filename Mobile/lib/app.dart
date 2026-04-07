@@ -79,11 +79,31 @@ class _AppRootState extends State<AppRoot> {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigo,
-          primary: Colors.indigo[900]!,
-          secondary: Colors.blueAccent,
+          primary: const Color(0xFF1A1A2E), // Deep Obsidian
+          secondary: const Color(0xFF16213E), // Midnight Blue
+          tertiary: const Color(0xFF0F3460), // Deep Navy
         ),
+        scaffoldBackgroundColor: Colors.white,
         textTheme: const TextTheme(
-          headlineMedium: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          headlineMedium: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E), fontSize: 28),
+          bodyLarge: TextStyle(color: Color(0xFF1A1A2E), fontSize: 16),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF7F7F7),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF1A1A2E), width: 1.5)),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1A1A2E),
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 56),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 2,
+          ),
         ),
       ),
       home: Consumer<AuthViewModel>(
@@ -124,24 +144,60 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.indigo[900],
-      body: Center(
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1A1A2E),
+              Color(0xFF16213E),
+              Color(0xFF0F3460),
+            ],
+          ),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.location_on_rounded, size: 80, color: Colors.white),
-            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+              ),
+              child: const Icon(Icons.location_on_rounded, size: 60, color: Colors.white),
+            ),
+            const SizedBox(height: 32),
             const Text(
               'ISSOP',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 4,
+                fontSize: 40,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 8,
               ),
             ),
-            const SizedBox(height: 16),
-            const CircularProgressIndicator(color: Colors.white),
+            const SizedBox(height: 8),
+            Text(
+              'SMART CITY PLATFORM',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 60),
+            const SizedBox(
+              width: 40,
+              height: 2,
+              child: LinearProgressIndicator(
+                backgroundColor: Colors.transparent,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
           ],
         ),
       ),
