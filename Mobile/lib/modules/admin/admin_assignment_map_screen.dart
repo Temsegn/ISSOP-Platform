@@ -92,23 +92,29 @@ class _AdminAssignmentMapScreenState extends State<AdminAssignmentMapScreen> {
                 point: LatLng(widget.request.latitude, widget.request.longitude),
                 child: const Icon(Icons.report_problem_rounded, color: Colors.redAccent, size: 40),
               ),
-              // Nearby Agents
+              // Nearby Agents (Ensures all with coordinates are visible)
               ...adminVm.agents.where((a) => a.latitude != null).map((agent) {
                 final bool isOnline = agent.lastLocationUpdate != null && 
                                      DateTime.now().difference(agent.lastLocationUpdate!).inMinutes < 15;
                 final Color statusColor = isOnline ? Colors.green : Colors.redAccent;
                 
                 return Marker(
+                  width: 45,
+                  height: 45,
                   point: LatLng(agent.latitude!, agent.longitude!),
                   child: GestureDetector(
                     onTap: () => _showAgentPopup(agent, adminVm),
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))]),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9), 
+                        shape: BoxShape.circle, 
+                        boxShadow: [BoxShadow(color: statusColor.withOpacity(0.4), blurRadius: 12, spreadRadius: 2, offset: const Offset(0, 4))]
+                      ),
                       child: Container(
                         decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
                         alignment: Alignment.center,
-                        child: const Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
+                        child: const Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
                       ),
                     ),
                   ),
