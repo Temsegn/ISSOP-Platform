@@ -118,6 +118,11 @@ class RequestService {
 
     // Notify citizen about status update
     await notificationService.notifyCitizenStatusUpdated(request.citizenId, requestId, request.title, newStatus);
+    
+    // Notify agent if one is assigned
+    if (request.agentId && currentUser.id !== request.agentId) {
+       await notificationService.notifyAgentStatusUpdated(request.agentId, requestId, request.title, newStatus);
+    }
 
     return updatedRequest;
   }

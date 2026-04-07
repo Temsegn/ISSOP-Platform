@@ -19,6 +19,21 @@ class NotificationService {
     });
   }
 
+  async notifyAgentStatusUpdated(agentId, requestId, requestTitle, newStatus) {
+    if (!agentId) return null; // If no agent is assigned yet
+    return await notificationRepository.create({
+      userId: agentId,
+      requestId,
+      type: 'STATUS_UPDATED',
+      message: `The status of the task "${requestTitle}" assigned to you has been updated to: ${newStatus}.`,
+    });
+  }
+
+  async notifyAdminsRequestCreated(requestId, requestTitle) {
+      // In a broader implementation, we could fetch admins in the area to notify them.
+      // For now, it's defined per the instructions.
+  }
+
   async getUserNotifications(userId) {
     return await notificationRepository.findByUserId(userId);
   }
