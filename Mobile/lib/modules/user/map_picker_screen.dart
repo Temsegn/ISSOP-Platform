@@ -16,11 +16,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   String _currentAddress = 'Searching...';
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedLocation = widget.initialLocation;
+    _selectedLocation = widget.initialLocation.latitude == 0 && widget.initialLocation.longitude == 0 
+        ? const LatLng(37.7749, -122.4194) // Default fallback if no location
+        : widget.initialLocation;
     _getAddress(_selectedLocation);
   }
 
@@ -30,26 +33,56 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
         setState(() {
-          _currentAddress = '${p.street}, ${p.subLocality}, ${p.locality}';
+          _currentAddress = [p.street, p.subLocality, p.locality].where((e) => e != null && e.isNotEmpty).join(', ');
+          if (_currentAddress.isEmpty) _currentAddress = 'Unknown Location';
         });
+      } else {
+        setState(() => _currentAddress = 'Unknown Location');
       }
     } catch (e) {
-      setState(() => _currentAddress = 'Unknown Location');
+      setState(() => _currentAddress = 'Location details unavailable');
     }
   }
 
   Future<void> _onSearch() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _isSearching = true;
+      _currentAddress = 'Finding location...';
+    });
+
+    FocusScope.of(context).unfocus();
+
     try {
-      List<Location> locations = await locationFromAddress(_searchController.text);
+      List<Location> locations = await locationFromAddress(query);
       if (locations.isNotEmpty) {
         final loc = locations.first;
         final target = LatLng(loc.latitude, loc.longitude);
-        _mapController.move(target, 15);
-        setState(() => _selectedLocation = target);
+        _mapController.move(target, 16);
+        setState(() {
+          _selectedLocation = target;
+        });
         _getAddress(target);
+      } else {
+        throw Exception('Not found');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address not found')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Address not found, please try a different search'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.redAccent,
+          )
+        );
+      }
+      setState(() => _currentAddress = 'Search failed');
+    } finally {
+      if (mounted) {
+        setState(() => _isSearching = false);
+      }
     }
   }
 
@@ -62,25 +95,41 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         elevation: 0,
         leading: Container(
           margin: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-          child: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
+          decoration: BoxDecoration(
+            color: Colors.white, 
+            shape: BoxShape.circle,
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8)],
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 18), 
+            onPressed: () => Navigator.pop(context)
+          ),
         ),
         title: Container(
-          height: 48,
+          height: 50,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 4))],
           ),
           child: TextField(
             controller: _searchController,
+            textInputAction: TextInputAction.search,
             decoration: InputDecoration(
-              hintText: 'Search place...',
-              hintStyle: const TextStyle(fontSize: 14),
+              hintText: 'Search for a place...',
+              hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               border: InputBorder.none,
-              prefixIcon: const Icon(Icons.search, size: 20),
-              suffixIcon: IconButton(icon: const Icon(Icons.check, size: 20), onPressed: _onSearch),
-              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              prefixIcon: const Icon(Icons.search, size: 22, color: Colors.blueAccent),
+              suffixIcon: _isSearching
+                ? const Padding(
+                    padding: EdgeInsets.all(14.0),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.send_rounded, size: 20, color: Colors.blueAccent), 
+                    onPressed: _onSearch
+                  ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
             ),
             onSubmitted: (_) => _onSearch(),
           ),
@@ -92,9 +141,9 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             mapController: _mapController,
             options: MapOptions(
               initialCenter: _selectedLocation,
-              initialZoom: 15.0,
+              initialZoom: 16.0,
               onPositionChanged: (pos, hasGesture) {
-                if (hasGesture) {
+                if (hasGesture && pos.center != null) {
                   setState(() => _selectedLocation = pos.center!);
                 }
               },
@@ -109,44 +158,76 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               ),
             ],
           ),
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 40),
-              child: Icon(Icons.location_on, size: 50, color: Colors.redAccent),
+          // Precision Map Marker
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blueAccent,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: Colors.blueAccent.withOpacity(0.4), blurRadius: 12, spreadRadius: 4)
+                    ]
+                  ),
+                  child: const Icon(Icons.location_on, size: 30, color: Colors.white),
+                ),
+                Container(
+                  width: 4,
+                  height: 4,
+                  margin: const EdgeInsets.only(top: 2),
+                  decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                ),
+              ],
             ),
           ),
+          // Interactive elements below Map
           Positioned(
             bottom: 30,
             left: 20,
             right: 20,
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20)],
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 25, offset: const Offset(0, 10))],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Confirm Location', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.place, color: Colors.blueAccent, size: 20),
-                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.place, color: Colors.blueAccent, size: 24),
+                      ),
+                      const SizedBox(width: 16),
                       Expanded(
-                        child: Text(
-                          _currentAddress,
-                          style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Selected Location', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF1A1A2E))),
+                            const SizedBox(height: 4),
+                            Text(
+                              _currentAddress,
+                              style: TextStyle(color: Colors.grey[600], fontSize: 14, height: 1.3),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context, {
                       'location': _selectedLocation,
@@ -154,10 +235,13 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                     }),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1A1A2E),
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 5,
+                      shadowColor: const Color(0xFF1A1A2E).withOpacity(0.4),
                     ),
-                    child: const Text('CONFIRM THIS PLACE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                    child: const Text('CONFIRM THIS PLACE', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, letterSpacing: 1.2)),
                   ),
                 ],
               ),
