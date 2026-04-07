@@ -7,6 +7,7 @@ import 'package:issop_mobile/viewmodels/agent_viewmodel.dart';
 import 'package:issop_mobile/viewmodels/notification_viewmodel.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:intl/intl.dart';
+import 'package:issop_mobile/modules/sync/sync_center_screen.dart';
 
 class AgentHomeScreen extends StatefulWidget {
   const AgentHomeScreen({super.key});
@@ -274,6 +275,14 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
           ],
         ),
         actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+            child: IconButton(
+              icon: const Icon(Icons.sync_problem_rounded, color: Colors.orangeAccent),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncCenterScreen())),
+            ),
+          ),
           Container(
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),

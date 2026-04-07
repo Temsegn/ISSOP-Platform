@@ -40,6 +40,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     super.dispose();
   }
 
+  bool _isOffline = false;
+
   Future<void> _getAddress(LatLng location) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(location.latitude, location.longitude);
@@ -47,15 +49,21 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         final p = placemarks.first;
         if (mounted) {
           setState(() {
+            _isOffline = false;
             _currentAddress = [p.name, p.street, p.subLocality, p.locality].where((e) => e != null && e.isNotEmpty).join(', ');
-            if (_currentAddress.isEmpty) _currentAddress = 'Unknown Location';
+            if (_currentAddress.isEmpty) _currentAddress = 'Lat: ${location.latitude.toStringAsFixed(4)}, Lng: ${location.longitude.toStringAsFixed(4)}';
           });
         }
       } else {
         if (mounted) setState(() => _currentAddress = 'Unknown Location');
       }
     } catch (e) {
-      if (mounted) setState(() => _currentAddress = 'Location details unavailable');
+      if (mounted) {
+        setState(() {
+          _isOffline = true;
+          _currentAddress = 'Lat: ${location.latitude.toStringAsFixed(5)}, Lng: ${location.longitude.toStringAsFixed(5)}';
+        });
+      }
     }
   }
 
@@ -214,9 +222,38 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.issop.app',
                 maxZoom: 19,
+                errorTileCallback: (tile, error, stackTrace) {
+                  if (mounted && !_isOffline) {
+                    setState(() => _isOffline = true);
+                  }
+                },
               ),
             ],
           ),
+          if (_isOffline)
+            Positioned(
+              top: 110,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.orangeAccent.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.wifi_off_rounded, color: Colors.white, size: 16),
+                      SizedBox(width: 8),
+                      Text('OFFLINE GPS MODE ACTIVE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           // Precision Map Marker
           Center(
             child: Column(

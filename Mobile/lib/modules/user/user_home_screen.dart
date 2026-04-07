@@ -5,6 +5,7 @@ import 'package:issop_mobile/viewmodels/request_viewmodel.dart';
 import 'package:issop_mobile/modules/user/create_request_screen.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:issop_mobile/modules/user/request_details_screen.dart';
+import 'package:issop_mobile/modules/sync/sync_center_screen.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -130,6 +131,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         ),
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.sync_problem_rounded, color: Colors.orangeAccent),
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncCenterScreen())),
+        ),
         IconButton(
           icon: const Icon(Icons.logout_rounded, color: Colors.white),
           onPressed: () => auth.logout(),
