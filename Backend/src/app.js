@@ -9,6 +9,7 @@ const userRoutes = require('./modules/users/user.routes');
 const requestRoutes = require('./modules/requests/request.routes');
 const taskRoutes = require('./modules/tasks/task.routes');
 const notificationRoutes = require('./modules/notifications/notification.routes');
+const analyticsRoutes = require('./modules/analytics/analytics.routes');
 const errorMiddleware = require('./middleware/error.middleware');
 
 const app = express();
@@ -29,6 +30,7 @@ app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/requests', requestRoutes);
 app.use('/api/v1/agent/tasks', taskRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 // Error Handling
 app.use(errorMiddleware);
