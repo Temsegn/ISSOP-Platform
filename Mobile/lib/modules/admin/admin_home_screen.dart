@@ -6,6 +6,7 @@ import 'package:issop_mobile/viewmodels/notification_viewmodel.dart';
 import 'package:issop_mobile/modules/admin/admin_request_detail_screen.dart';
 import 'package:issop_mobile/core/models/user_model.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
+import 'package:issop_mobile/modules/admin/admin_ops_map_screen.dart';
 import 'package:intl/intl.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -87,7 +88,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FC),
       appBar: AppBar(
-        toolbarHeight: 140,
+        toolbarHeight: 80,
         backgroundColor: Colors.white,
         elevation: 0,
         title: Column(
@@ -103,6 +104,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.map_rounded, color: Colors.blueAccent),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminOpsMapScreen())),
+          ),
           Consumer<NotificationViewModel>(builder: (context, n, _) {
             return IconButton(
               icon: Icon(Icons.notifications_none_rounded, color: Colors.blueGrey.shade700),
@@ -116,17 +121,25 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
           ),
           const SizedBox(width: 16),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: const Color(0xFF1A1A2E),
-          unselectedLabelColor: Colors.grey.shade400,
-          indicatorColor: const Color(0xFF1A1A2E),
-          indicatorWeight: 4,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1),
-          tabs: const [
-            Tab(text: 'CITIZEN REPORTS'),
-            Tab(text: 'TEAM ROSTER'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(160),
+          child: Column(
+            children: [
+              _buildTopStats(adminVm),
+              TabBar(
+                controller: _tabController,
+                labelColor: const Color(0xFF1A1A2E),
+                unselectedLabelColor: Colors.grey.shade400,
+                indicatorColor: const Color(0xFF1A1A2E),
+                indicatorWeight: 4,
+                labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1),
+                tabs: const [
+                  Tab(text: 'REPORTS'),
+                  Tab(text: 'TEAMS'),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       body: TabBarView(
@@ -254,6 +267,45 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
         ElevatedButton(onPressed: () { vm.upgradeUserToAgent(user.id); Navigator.pop(ctx); }, child: const Text('YES')),
       ],
     ));
+  }
+
+  Widget _buildTopStats(AdminViewModel vm) {
+    final active = vm.requests.where((r) => r.status != 'COMPLETED').length;
+    final agents = vm.agents.length;
+    final solved = vm.requests.where((r) => r.status == 'COMPLETED').length;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        children: [
+          _buildMiniStat('Active Ops', active.toString(), Colors.orange),
+          const SizedBox(width: 12),
+          _buildMiniStat('Field Team', agents.toString(), Colors.blueAccent),
+          const SizedBox(width: 12),
+          _buildMiniStat('Solutions', solved.toString(), Colors.green),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniStat(String label, String value, Color color) {
+    return Container(
+      width: 120,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.1), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade600)),
+        ],
+      ),
+    );
   }
 
   Color _getStatusColor(String status) {

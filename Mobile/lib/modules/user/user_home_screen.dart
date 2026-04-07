@@ -6,6 +6,7 @@ import 'package:issop_mobile/modules/user/create_request_screen.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:issop_mobile/modules/user/request_details_screen.dart';
 import 'package:issop_mobile/modules/sync/sync_center_screen.dart';
+import 'package:issop_mobile/modules/user/user_map_screen.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -173,35 +174,38 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
       child: Row(
         children: [
-          _buildActionCard(Icons.map_rounded, 'Map View', const Color(0xFF4facfe)),
-          _buildActionCard(Icons.notifications_active_rounded, 'Alerts', Colors.orange),
-          _buildActionCard(Icons.support_agent_rounded, 'Support', Colors.purpleAccent),
-          _buildActionCard(Icons.history_rounded, 'History', Colors.teal),
+          _buildActionCard(Icons.map_rounded, 'Map View', const Color(0xFF4facfe), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserMapScreen()))),
+          _buildActionCard(Icons.notifications_active_rounded, 'Alerts', Colors.orange, () {}),
+          _buildActionCard(Icons.support_agent_rounded, 'Support', Colors.purpleAccent, () {}),
+          _buildActionCard(Icons.history_rounded, 'History', Colors.teal, () {}),
         ],
       ),
     );
   }
 
-  Widget _buildActionCard(IconData icon, String label, Color color) {
-    return Container(
-      width: 110,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 12),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF1A1A2E))),
-        ],
+  Widget _buildActionCard(IconData icon, String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 110,
+        margin: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 12),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF1A1A2E))),
+          ],
+        ),
       ),
     );
   }
