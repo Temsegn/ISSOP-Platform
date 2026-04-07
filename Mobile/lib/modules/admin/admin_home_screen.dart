@@ -4,6 +4,8 @@ import 'package:issop_mobile/viewmodels/auth_viewmodel.dart';
 import 'package:issop_mobile/viewmodels/admin_viewmodel.dart';
 import 'package:issop_mobile/viewmodels/notification_viewmodel.dart';
 import 'package:issop_mobile/modules/admin/admin_request_detail_screen.dart';
+import 'package:issop_mobile/core/models/user_model.dart';
+import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:intl/intl.dart';
 
 class AdminHomeScreen extends StatefulWidget {

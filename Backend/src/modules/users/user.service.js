@@ -1,4 +1,5 @@
 const userRepository = require('./user.repository');
+const socketService = require('../../config/socket');
 
 class UserService {
   async getAllUsers(currentUser) {
@@ -48,11 +49,19 @@ class UserService {
   }
 
   async updateLocation(userId, lat, lon) {
-    return await userRepository.update(userId, {
+    const user = await userRepository.update(userId, {
       latitude: lat,
       longitude: lon,
       lastLocationUpdate: new Date(),
     });
+
+    // Real-time update for admins
+    socketService.emitToRoom('admins', 'agent_location_updated', user);
+    if (user.area) {
+       socketService.emitToRoom(`admin_area_${user.area}`, 'agent_location_updated', user);
+    }
+
+    return user;
   }
 }
 

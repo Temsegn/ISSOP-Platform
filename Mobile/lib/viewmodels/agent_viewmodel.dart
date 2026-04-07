@@ -8,13 +8,25 @@ import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:issop_mobile/core/services/agent_service.dart';
 import 'package:dio/dio.dart';
 
+import 'package:issop_mobile/core/services/socket_service.dart';
+
 class AgentViewModel extends ChangeNotifier {
   final AgentService _agentService;
+  final SocketService _socketService;
   late SharedPreferences _prefs;
   bool _prefsInitialized = false;
 
-  AgentViewModel(this._agentService) {
+  AgentViewModel(this._agentService, this._socketService) {
     _initPrefs();
+    _initSocket();
+  }
+
+  void _initSocket() {
+    _socketService.events.listen((event) {
+      if (event.name == 'task_assigned' || event.name == 'status_updated') {
+        fetchTasks();
+      }
+    });
   }
 
   Future<void> _initPrefs() async {

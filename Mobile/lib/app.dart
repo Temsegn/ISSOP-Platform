@@ -17,6 +17,8 @@ import 'package:issop_mobile/modules/agent/agent_home_screen.dart';
 import 'package:issop_mobile/modules/admin/admin_home_screen.dart';
 import 'package:issop_mobile/modules/onboarding/onboarding_screen.dart';
 
+import 'package:issop_mobile/core/services/socket_service.dart';
+
 class App extends StatefulWidget {
   const App({super.key});
 
@@ -33,6 +35,9 @@ class _AppState extends State<App> {
         ProxyProvider<StorageService, NetworkService>(
           update: (_, storage, __) => NetworkService(storage),
         ),
+        ProxyProvider<StorageService, SocketService>(
+          update: (_, storage, __) => SocketService(storage),
+        ),
         ProxyProvider<NetworkService, AuthService>(
           update: (_, network, __) => AuthService(network),
         ),
@@ -45,28 +50,29 @@ class _AppState extends State<App> {
         ProxyProvider<NetworkService, AdminService>(
           update: (_, network, __) => AdminService(network),
         ),
-        ChangeNotifierProxyProvider2<AuthService, StorageService, AuthViewModel>(
+        ChangeNotifierProxyProvider3<AuthService, StorageService, SocketService, AuthViewModel>(
           create: (context) => AuthViewModel(
             context.read<AuthService>(),
             context.read<StorageService>(),
+            context.read<SocketService>(),
           ),
-          update: (_, authSvc, storage, vm) => vm ?? AuthViewModel(authSvc, storage),
+          update: (_, authSvc, storage, socket, vm) => vm ?? AuthViewModel(authSvc, storage, socket),
         ),
-        ChangeNotifierProxyProvider<RequestService, RequestViewModel>(
-          create: (context) => RequestViewModel(context.read<RequestService>()),
-          update: (_, svc, vm) => vm ?? RequestViewModel(svc),
+        ChangeNotifierProxyProvider2<RequestService, SocketService, RequestViewModel>(
+          create: (context) => RequestViewModel(context.read<RequestService>(), context.read<SocketService>()),
+          update: (_, svc, socket, vm) => vm ?? RequestViewModel(svc, socket),
         ),
-        ChangeNotifierProxyProvider<AgentService, AgentViewModel>(
-          create: (context) => AgentViewModel(context.read<AgentService>()),
-          update: (_, svc, vm) => vm ?? AgentViewModel(svc),
+        ChangeNotifierProxyProvider2<AgentService, SocketService, AgentViewModel>(
+          create: (context) => AgentViewModel(context.read<AgentService>(), context.read<SocketService>()),
+          update: (_, svc, socket, vm) => vm ?? AgentViewModel(svc, socket),
         ),
-        ChangeNotifierProxyProvider<AdminService, AdminViewModel>(
-          create: (context) => AdminViewModel(context.read<AdminService>()),
-          update: (_, svc, vm) => vm ?? AdminViewModel(svc),
+        ChangeNotifierProxyProvider2<AdminService, SocketService, AdminViewModel>(
+          create: (context) => AdminViewModel(context.read<AdminService>(), context.read<SocketService>()),
+          update: (_, svc, socket, vm) => vm ?? AdminViewModel(svc, socket),
         ),
-        ChangeNotifierProxyProvider<NetworkService, NotificationViewModel>(
-          create: (context) => NotificationViewModel(context.read<NetworkService>()),
-          update: (_, svc, vm) => vm ?? NotificationViewModel(svc),
+        ChangeNotifierProxyProvider2<NetworkService, SocketService, NotificationViewModel>(
+          create: (context) => NotificationViewModel(context.read<NetworkService>(), context.read<SocketService>()),
+          update: (_, svc, socket, vm) => vm ?? NotificationViewModel(svc, socket),
         ),
       ],
       child: FutureBuilder(

@@ -2,11 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:issop_mobile/core/models/user_model.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:issop_mobile/core/services/admin_service.dart';
+import 'package:issop_mobile/core/services/socket_service.dart';
 
 class AdminViewModel extends ChangeNotifier {
   final AdminService _adminService;
+  final SocketService _socketService;
 
-  AdminViewModel(this._adminService);
+  AdminViewModel(this._adminService, this._socketService) {
+    _initSocket();
+  }
+
+  void _initSocket() {
+    _socketService.events.listen((event) {
+      if (event.name == 'request_created') {
+        fetchRequests();
+      } else if (event.name == 'agent_location_updated') {
+        _handleLocationUpdate(event.data);
+      }
+    });
+  }
+
+  void _handleLocationUpdate(dynamic data) {
+    try {
+      final updatedUser = UserModel.fromJson(data);
+      final index = _agents.indexWhere((a) => a.id == updatedUser.id);
+      if (index != -1) {
+        _agents[index] = updatedUser;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
 
   List<UserModel> _users = [];
   List<UserModel> get users => _users;
@@ -18,13 +43,24 @@ class AdminViewModel extends ChangeNotifier {
   List<UserModel> get agents => _agents;
 
   List<UserModel> getAgentsSortedByProximity(double lat, double lng) {
-    List<UserModel> sorted = List.from(_agents.where((u) => u.latitude != null && u.longitude != null));
-    sorted.sort((a, b) {
+    List<UserModel> hasLoc = [];
+    List<UserModel> noLoc = [];
+    
+    for (var u in _agents) {
+      if (u.latitude != null && u.longitude != null) {
+        hasLoc.add(u);
+      } else {
+        noLoc.add(u);
+      }
+    }
+    
+    hasLoc.sort((a, b) {
       double distA = (a.latitude! - lat) * (a.latitude! - lat) + (a.longitude! - lng) * (a.longitude! - lng);
       double distB = (b.latitude! - lat) * (b.latitude! - lat) + (b.longitude! - lng) * (b.longitude! - lng);
       return distA.compareTo(distB);
     });
-    return sorted;
+    
+    return [...hasLoc, ...noLoc];
   }
 
   bool _loading = false;

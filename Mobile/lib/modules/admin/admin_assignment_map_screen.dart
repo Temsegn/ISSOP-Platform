@@ -103,7 +103,7 @@ class _AdminAssignmentMapScreenState extends State<AdminAssignmentMapScreen> {
                 child: const Icon(Icons.report_problem_rounded, color: Colors.redAccent, size: 40),
               ),
               // Nearby Agents (Ensures all with coordinates are visible)
-              ...adminVm.agents.where((a) => a.latitude != null).map((agent) {
+              ...adminVm.agents.where((UserModel a) => a.latitude != null).map((UserModel agent) {
                 final bool isOnline = agent.lastLocationUpdate != null && 
                                      DateTime.now().difference(agent.lastLocationUpdate!).inMinutes < 15;
                 final Color statusColor = isOnline ? Colors.green : Colors.redAccent;

@@ -1,20 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
+import 'package:issop_mobile/core/models/user_model.dart';
+import 'package:issop_mobile/viewmodels/admin_viewmodel.dart';
 import 'package:intl/intl.dart';
 import 'package:issop_mobile/modules/admin/admin_assignment_map_screen.dart';
 
-class AdminRequestDetailScreen extends StatelessWidget {
+class AdminRequestDetailScreen extends StatefulWidget {
   final RequestModel request;
   const AdminRequestDetailScreen({super.key, required this.request});
 
   @override
+  State<AdminRequestDetailScreen> createState() => _AdminRequestDetailScreenState();
+}
+
+class _AdminRequestDetailScreenState extends State<AdminRequestDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminViewModel>().fetchUsers();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final request = widget.request;
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFD),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 280,
             pinned: true,
             backgroundColor: const Color(0xFF1A1A2E),
             leading: IconButton(
@@ -23,20 +40,8 @@ class AdminRequestDetailScreen extends StatelessWidget {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: request.mediaUrls.isNotEmpty
-                  ? PageView.builder(
-                      itemCount: request.mediaUrls.length,
-                      itemBuilder: (context, index) {
-                        return Image.network(
-                          request.mediaUrls[index],
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.white54)),
-                        );
-                      },
-                    )
-                  : Container(
-                      color: const Color(0xFF1A1A2E),
-                      child: const Icon(Icons.image_not_supported_outlined, color: Colors.white24, size: 80),
-                    ),
+                ? Image.network(request.mediaUrls[0], fit: BoxFit.cover)
+                : Container(color: Colors.blueGrey.shade100, child: const Icon(Icons.image_not_supported_rounded, size: 80, color: Colors.white)),
             ),
           ),
           SliverToBoxAdapter(
@@ -46,28 +51,26 @@ class AdminRequestDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildStatusChip(request.status),
-                      Text(DateFormat('MMM dd, yyyy').format(request.createdAt), style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+                      const Spacer(),
+                      Text(DateFormat('MMMM dd, yyyy').format(request.createdAt), style: TextStyle(color: Colors.grey.shade500, fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text(request.title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Color(0xFF1A1A2E))),
+                  Text(request.title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Color(0xFF1A1A2E), letterSpacing: -0.5)),
                   const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                    child: Text(request.category, style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w800, fontSize: 13)),
+                  Row(
+                    children: [
+                      CircleAvatar(radius: 12, backgroundColor: Colors.blue.shade50, child: const Icon(Icons.person, size: 14, color: Colors.blueAccent)),
+                      const SizedBox(width: 8),
+                      Text('By ${request.citizenName ?? 'Unknown citizen'}', style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+                    ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                   const _SectionHeader(title: 'DESCRIPTION'),
                   const SizedBox(height: 12),
-                  Text(request.description, style: TextStyle(fontSize: 16, color: Colors.grey.shade800, height: 1.6)),
-                  const SizedBox(height: 32),
-                  const _SectionHeader(title: 'REPORTER DETAILS'),
-                  const SizedBox(height: 12),
-                  _buildDetailRow(Icons.person_outline, 'Citizen Name', request.citizenName ?? 'Unknown Citizen'),
+                  Text(request.description, style: TextStyle(fontSize: 16, color: Colors.blueGrey.shade700, height: 1.6)),
                   const SizedBox(height: 32),
                   const _SectionHeader(title: 'LOCATION'),
                   const SizedBox(height: 12),
@@ -91,8 +94,10 @@ class AdminRequestDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Consumer<AdminViewModel>(
                     builder: (context, vm, _) {
+                      if (vm.loading && vm.agents.isEmpty) return const Center(child: CircularProgressIndicator());
+                      
                       final sortedAgents = vm.getAgentsSortedByProximity(request.latitude, request.longitude);
-                      if (sortedAgents.isEmpty) return const Text('No agents identified.');
+                      if (sortedAgents.isEmpty) return const Text('No agents found in database.', style: TextStyle(color: Colors.grey));
                       
                       return Column(
                         children: sortedAgents.take(5).map((agent) => Container(
@@ -202,10 +207,11 @@ class AdminRequestDetailScreen extends StatelessWidget {
     if (status == 'ASSIGNED') color = Colors.blue;
     if (status == 'IN_PROGRESS') color = Colors.indigo;
     if (status == 'COMPLETED') color = Colors.green;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-      child: Text(status, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+      child: Text(status, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1)),
     );
   }
 

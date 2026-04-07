@@ -1,13 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:issop_mobile/core/models/user_model.dart';
-import 'package:issop_mobile/core/services/auth_service.dart';
-import 'package:issop_mobile/core/services/storage_service.dart';
+import 'package:issop_mobile/core/services/socket_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService;
   final StorageService _storageService;
+  final SocketService _socketService;
 
-  AuthViewModel(this._authService, this._storageService);
+  AuthViewModel(this._authService, this._storageService, this._socketService);
 
   UserModel? _user;
   UserModel? get user => _user;
@@ -30,8 +28,9 @@ class AuthViewModel extends ChangeNotifier {
     
     if (token != null) {
       try {
-        final response = await _authService.getProfile(); // Need to implement this in AuthService
+        final response = await _authService.getProfile(); 
         _user = response;
+        _socketService.connect();
       } catch (e) {
         await _storageService.clear();
       }
@@ -48,6 +47,7 @@ class AuthViewModel extends ChangeNotifier {
       final res = await _authService.login(email, password);
       _user = res['user'];
       await _storageService.saveToken(res['token']);
+      _socketService.connect();
       _loading = false;
       notifyListeners();
       return true;
@@ -67,6 +67,7 @@ class AuthViewModel extends ChangeNotifier {
       final res = await _authService.register(name, email, password, phone: phone);
       _user = res['user'];
       await _storageService.saveToken(res['token']);
+      _socketService.connect();
       _loading = false;
       notifyListeners();
       return true;
@@ -81,6 +82,7 @@ class AuthViewModel extends ChangeNotifier {
   void logout() {
     _user = null;
     _storageService.clear();
+    _socketService.disconnect();
     notifyListeners();
   }
 }

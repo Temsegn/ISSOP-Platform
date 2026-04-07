@@ -5,10 +5,23 @@ import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:issop_mobile/core/services/request_service.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'package:issop_mobile/core/services/socket_service.dart';
+
 class RequestViewModel extends ChangeNotifier {
   final RequestService _requestService;
+  final SocketService _socketService;
 
-  RequestViewModel(this._requestService);
+  RequestViewModel(this._requestService, this._socketService) {
+    _initSocket();
+  }
+
+  void _initSocket() {
+    _socketService.events.listen((event) {
+      if (event.name == 'status_updated') {
+        fetchMyRequests();
+      }
+    });
+  }
 
   List<RequestModel> _requests = [];
   List<RequestModel> get requests => _requests;

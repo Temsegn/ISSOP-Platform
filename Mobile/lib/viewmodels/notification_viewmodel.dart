@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:issop_mobile/core/services/network_service.dart';
+import 'package:issop_mobile/core/services/socket_service.dart';
 import 'package:intl/intl.dart';
 
 class NotificationViewModel extends ChangeNotifier {
   final NetworkService _network;
-  NotificationViewModel(this._network);
+  final SocketService _socketService;
+
+  NotificationViewModel(this._network, this._socketService) {
+    _initSocket();
+  }
+
+  void _initSocket() {
+    _socketService.events.listen((event) {
+      if (event.name == 'notification_received') {
+        final newNotif = event.data;
+        if (!_notifications.any((n) => n['id'] == newNotif['id'])) {
+          _notifications.insert(0, newNotif);
+          notifyListeners();
+        }
+      }
+    });
+  }
 
   List<dynamic> _notifications = [];
   List<dynamic> get notifications => _notifications;
