@@ -42,7 +42,7 @@ describe('AuthService', () => {
 
       await expect(
         authService.register({ name: 'Test', email: 'test@example.com', password: 'password123' })
-      ).rejects.toThrow('Email already in use');
+      ).rejects.toThrow('User with this email already exists');
     });
   });
 });
