@@ -1,6 +1,7 @@
 const express = require('express');
 const requestController = require('./request.controller');
 const authMiddleware = require('../../middleware/auth.middleware');
+const authorize = require('../../middleware/role.middleware');
 const validate = require('../../middleware/validate.middleware');
 const { createRequestSchema, getRequestsQuerySchema } = require('./request.validation');
 
