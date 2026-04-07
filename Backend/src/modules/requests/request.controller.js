@@ -36,6 +36,37 @@ class RequestController {
       data: { request },
     });
   }
+
+  async assignTask(req, res) {
+    const { id } = req.params;
+    const { agentId } = req.body;
+
+    // Only Admin or SuperAdmin can assign tasks
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPERADMIN') {
+      const error = new Error('Permission denied to assign tasks');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const request = await requestService.assignRequest(id, agentId, req.user);
+
+    res.status(200).json({
+      status: 'success',
+      data: { request },
+    });
+  }
+
+  async updateStatus(req, res) {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const request = await requestService.updateRequestStatus(id, status, req.user);
+
+    res.status(200).json({
+      status: 'success',
+      data: { request },
+    });
+  }
 }
 
 module.exports = new RequestController();

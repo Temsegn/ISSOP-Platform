@@ -1,4 +1,6 @@
 const requestRepository = require('./request.repository');
+const userRepository = require('../users/user.repository');
+const notificationService = require('../notifications/notification.service');
 
 class RequestService {
   async createRequest(citizenId, requestData) {
@@ -52,6 +54,72 @@ class RequestService {
     }
 
     return request;
+  }
+
+  async assignRequest(requestId, agentId, currentUser) {
+    const request = await this.getRequestById(requestId, currentUser);
+
+    // Verify agent exists and is actually an agent
+    const agent = await userRepository.findById(agentId);
+    if (!agent || agent.role !== 'AGENT') {
+      const error = new Error('Invalid agent ID');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (currentUser.role === 'ADMIN' && currentUser.area !== agent.area) {
+       const error = new Error('Admins can only assign to agents in their own area');
+       error.statusCode = 403;
+       throw error;
+    }
+
+    const updatedRequest = await requestRepository.update(requestId, {
+      agentId,
+      status: 'ASSIGNED'
+    });
+
+    // Notify agent
+    await notificationService.notifyAgentTaskAssigned(agentId, requestId, request.title);
+
+    return updatedRequest;
+  }
+
+  async updateRequestStatus(requestId, newStatus, currentUser) {
+    const request = await this.getRequestById(requestId, currentUser);
+    const oldStatus = request.status;
+
+    // Validate status transitions
+    const allowedTransitions = {
+      'PENDING': ['ASSIGNED', 'REJECTED'],
+      'ASSIGNED': ['IN_PROGRESS', 'REJECTED'],
+      'IN_PROGRESS': ['COMPLETED', 'REJECTED'],
+      'COMPLETED': [],
+      'REJECTED': []
+    };
+
+    if (!allowedTransitions[oldStatus].includes(newStatus)) {
+      const error = new Error(`Invalid status transition from ${oldStatus} to ${newStatus}`);
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Role checks for transitions
+    // Admin/SuperAdmin can change anything
+    const isAdmin = currentUser.role === 'ADMIN' || currentUser.role === 'SUPERADMIN';
+    const isAssignedAgent = currentUser.role === 'AGENT' && request.agentId === currentUser.id;
+
+    if (!isAdmin && !isAssignedAgent) {
+       const error = new Error('You do not have permission to update the status of this request');
+       error.statusCode = 403;
+       throw error;
+    }
+
+    const updatedRequest = await requestRepository.update(requestId, { status: newStatus });
+
+    // Notify citizen about status update
+    await notificationService.notifyCitizenStatusUpdated(request.citizenId, requestId, request.title, newStatus);
+
+    return updatedRequest;
   }
 }
 
