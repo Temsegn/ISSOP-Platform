@@ -1,0 +1,414 @@
+openapi: 3.0.0
+info:
+  title: ISSOP Backend API
+  version: 1.0.0
+  description: API documentation for the ISSOP Platform
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string, enum: [SUPERADMIN, ADMIN, AGENT, USER] }
+        phone: { type: string }
+        area: { type: string }
+        isActive: { type: boolean }
+        latitude: { type: number }
+        longitude: { type: number }
+
+    Request:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        status: { type: string, enum: [PENDING, ASSIGNED, IN_PROGRESS, COMPLETED, REJECTED] }
+        mediaUrls: { type: array, items: { type: string } }
+        completionProofUrl: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        citizenId: { type: string }
+        agentId: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string }
+        message: { type: string }
+        isRead: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ---------------- AUTH MODULE ----------------
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string }
+                password: { type: string }
+                phone: { type: string }
+      responses:
+        '201':
+          description: User registered successfully
+
+  /auth/login:
+    post:
+      summary: Login user
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: OK
+
+  /auth/me:
+    get:
+      summary: Get current authenticated user
+      tags: [Auth]
+      responses:
+        '200':
+          description: OK
+
+  # ---------------- USERS MODULE ----------------
+  /users:
+    get:
+      summary: Get all users (Admin/SuperAdmin)
+      tags: [Users]
+      description: Admins see by area, SuperAdmins see all.
+      responses:
+        '200':
+          description: List of users
+
+  /users/nearest-agents:
+    get:
+      summary: Get nearest agents within radius (Admin/Agent)
+      tags: [Users]
+      parameters:
+        - in: query
+          name: lat
+          required: true
+          schema: { type: number }
+        - in: query
+          name: lon
+          required: true
+          schema: { type: number }
+        - in: query
+          name: radius
+          schema: { type: number, default: 10 }
+      responses:
+        '200':
+          description: Nearest agents
+
+  /users/location:
+    patch:
+      summary: Update agent location (Agent only)
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [latitude, longitude]
+              properties:
+                latitude: { type: number }
+                longitude: { type: number }
+      responses:
+        '200':
+          description: Location updated
+
+  /users/{id}/role:
+    patch:
+      summary: Change user role (SuperAdmin only)
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [SUPERADMIN, ADMIN, AGENT, USER] }
+      responses:
+        '200':
+          description: Role updated
+
+  /users/{id}:
+    get:
+      summary: Get user by ID (Self/Admin/SuperAdmin)
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+    patch:
+      summary: Update user (Self/Admin/SuperAdmin)
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                phone: { type: string }
+                area: { type: string }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Soft delete user (Admin/SuperAdmin)
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Deleted
+
+  # ---------------- REQUESTS MODULE ----------------
+  /requests:
+    post:
+      summary: Create a service request (Citizen)
+      tags: [Requests]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description, category, latitude, longitude]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                category: { type: string }
+                mediaUrls: { type: array, items: { type: string } }
+                latitude: { type: number }
+                longitude: { type: number }
+                address: { type: string }
+      responses:
+        '201':
+          description: Created
+    get:
+      summary: List requests (Citizen/Admin/SuperAdmin)
+      tags: [Requests]
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: fromDate
+          schema: { type: string, format: date }
+        - in: query
+          name: toDate
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: OK
+
+  /requests/{id}:
+    get:
+      summary: Get request details (Self/Admin/SuperAdmin)
+      tags: [Requests]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+
+  /requests/{id}/assign:
+    patch:
+      summary: Assign task to agent (Admin/SuperAdmin)
+      tags: [Requests]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [agentId]
+              properties:
+                agentId: { type: string }
+      responses:
+        '200':
+          description: Assigned
+
+  /requests/{id}/status:
+    patch:
+      summary: Update task status (Admin/Agent)
+      tags: [Requests]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [ASSIGNED, IN_PROGRESS, COMPLETED, REJECTED] }
+      responses:
+        '200':
+          description: Updated
+
+  # ---------------- AGENT TASKS MODULE ----------------
+  /agent/tasks/my-tasks:
+    get:
+      summary: Get assigned tasks (Agent)
+      tags: [Agent Tasks]
+      responses:
+        '200':
+          description: OK
+
+  /agent/tasks/{id}/accept:
+    patch:
+      summary: Accept assigned task (Agent)
+      tags: [Agent Tasks]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Task In Progress
+
+  /agent/tasks/{id}/reject:
+    patch:
+      summary: Reject assigned task (Agent)
+      tags: [Agent Tasks]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Task Returned to Pending
+
+  /agent/tasks/{id}/complete:
+    patch:
+      summary: Complete task with proof (Agent)
+      tags: [Agent Tasks]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [completionProofUrl]
+              properties:
+                completionProofUrl: { type: string, format: uri }
+      responses:
+        '200':
+          description: Task Completed
+
+  # ---------------- NOTIFICATIONS MODULE ----------------
+  /notifications:
+    get:
+      summary: Get recent notifications (Auth)
+      tags: [Notifications]
+      responses:
+        '200':
+          description: Array of notifications
+
+  /notifications/{id}/read:
+    patch:
+      summary: Mark notification as read (Auth)
+      tags: [Notifications]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Marked as read
+
+  # ---------------- ANALYTICS MODULE ----------------
+  /analytics/summary:
+    get:
+      summary: Global or Area-specific summary metrics (Admin/SuperAdmin)
+      tags: [Analytics]
+      responses:
+        '200':
+          description: Summary metrics
+
+  /analytics/agents:
+    get:
+      summary: Agent performance metrics (Admin/SuperAdmin)
+      tags: [Analytics]
+      responses:
+        '200':
+          description: Agent stats

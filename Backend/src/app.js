@@ -11,6 +11,7 @@ const taskRoutes = require('./modules/tasks/task.routes');
 const notificationRoutes = require('./modules/notifications/notification.routes');
 const analyticsRoutes = require('./modules/analytics/analytics.routes');
 const errorMiddleware = require('./middleware/error.middleware');
+const { swaggerServe, swaggerSetup } = require('./config/swagger');
 
 const app = express();
 
@@ -19,6 +20,9 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+
+// API Documentation
+app.use('/api-docs', swaggerServe, swaggerSetup);
 
 // Routes
 app.get('/', (req, res) => {
