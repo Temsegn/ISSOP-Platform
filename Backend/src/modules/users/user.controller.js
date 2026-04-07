@@ -60,6 +60,29 @@ class UserController {
       data: null,
     });
   }
+
+  async updateLocation(req, res) {
+    const { latitude, longitude } = req.body;
+    const user = await userService.updateLocation(req.user.id, latitude, longitude);
+    res.status(200).json({
+      status: 'success',
+      data: { user },
+    });
+  }
+
+  async getNearestAgents(req, res) {
+    const { lat, lon, radius } = req.query;
+    const agents = await userService.getNearestAgents(
+      parseFloat(lat),
+      parseFloat(lon),
+      parseFloat(radius || 10)
+    );
+    res.status(200).json({
+      status: 'success',
+      results: agents.length,
+      data: { agents },
+    });
+  }
 }
 
 module.exports = new UserController();

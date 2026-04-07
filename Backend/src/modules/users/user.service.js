@@ -26,6 +26,18 @@ class UserService {
     await this.getUserById(id);
     return await userRepository.softDelete(id);
   }
+
+  async getNearestAgents(lat, lon, radius) {
+    return await userRepository.findNearestAgents(lat, lon, radius);
+  }
+
+  async updateLocation(userId, lat, lon) {
+    return await userRepository.update(userId, {
+      latitude: lat,
+      longitude: lon,
+      lastLocationUpdate: new Date(),
+    });
+  }
 }
 
 module.exports = new UserService();

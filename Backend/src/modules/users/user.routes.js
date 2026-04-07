@@ -11,6 +11,12 @@ router.use(authMiddleware);
 // Admin-only route to list all users
 router.get('/', authorize('ADMIN'), userController.getAllUsers.bind(userController));
 
+// Route to find nearest agents (Admin/Agent)
+router.get('/nearest-agents', authorize('ADMIN', 'AGENT'), userController.getNearestAgents.bind(userController));
+
+// Route to update current user location
+router.patch('/location', authorize('AGENT'), userController.updateLocation.bind(userController));
+
 // Route to update current user ('me' convenience route)
 router.patch('/me', userController.updateMe.bind(userController));
 

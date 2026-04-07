@@ -55,6 +55,26 @@ class UserRepository {
       data: { isDeleted: true },
     });
   }
+
+  async findNearestAgents(lat, lon, radiusInKm = 10) {
+     // Radius of Earth in KM = 6371
+    return await prisma.$queryRaw`
+      WITH AgentDistances AS (
+        SELECT id, name, email, phone, role, "isActive", "isDeleted", latitude, longitude,
+               (6371 * acos(cos(radians(${lat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(${lon})) + sin(radians(${lat})) * sin(radians(latitude)))) AS distance
+        FROM "User"
+      )
+      SELECT *
+      FROM AgentDistances
+      WHERE role = 'AGENT' 
+        AND "isActive" = true 
+        AND "isDeleted" = false
+        AND latitude IS NOT NULL 
+        AND longitude IS NOT NULL
+        AND distance < ${radiusInKm}
+      ORDER BY distance ASC
+    `;
+  }
 }
 
 module.exports = new UserRepository();
