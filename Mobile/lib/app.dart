@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:issop_mobile/core/services/auth_service.dart';
 import 'package:issop_mobile/core/services/network_service.dart';
 import 'package:issop_mobile/core/services/storage_service.dart';
+import 'package:issop_mobile/viewmodels/auth_viewmodel.dart';
 import 'package:issop_mobile/modules/auth/login_screen.dart';
 import 'package:issop_mobile/modules/citizen/citizen_home_screen.dart';
 import 'package:issop_mobile/modules/agent/agent_home_screen.dart';
