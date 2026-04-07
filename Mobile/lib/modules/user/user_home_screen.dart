@@ -89,25 +89,31 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       backgroundColor: const Color(0xFF1A1A2E),
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+        centerTitle: false,
         title: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Welcome back,', style: TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.w400)),
-                Text(auth.user?.name ?? 'User', style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w900)),
-              ],
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Welcome back,', style: TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.w400)),
+                  Text(auth.user?.name ?? 'User', style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w900), overflow: TextOverflow.ellipsis),
+                ],
+              ),
             ),
-            const Spacer(),
+            const SizedBox(width: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.15), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blueAccent.withOpacity(0.3))),
               child: const Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.radar, color: Colors.blueAccent, size: 10),
+                  Icon(Icons.radar, color: Colors.blueAccent, size: 8),
                   SizedBox(width: 4),
-                  Text('ACTIVE TRACKING', style: TextStyle(color: Colors.blueAccent, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                  Text('ACTIVE TRACKING', style: TextStyle(color: Colors.blueAccent, fontSize: 7, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
                 ],
               ),
             ),
