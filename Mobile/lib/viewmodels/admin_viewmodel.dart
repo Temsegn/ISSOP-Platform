@@ -17,6 +17,16 @@ class AdminViewModel extends ChangeNotifier {
   List<UserModel> _agents = [];
   List<UserModel> get agents => _agents;
 
+  List<UserModel> getAgentsSortedByProximity(double lat, double lng) {
+    List<UserModel> sorted = List.from(_agents.where((u) => u.latitude != null && u.longitude != null));
+    sorted.sort((a, b) {
+      double distA = (a.latitude! - lat) * (a.latitude! - lat) + (a.longitude! - lng) * (a.longitude! - lng);
+      double distB = (b.latitude! - lat) * (b.latitude! - lat) + (b.longitude! - lng) * (b.longitude! - lng);
+      return distA.compareTo(distB);
+    });
+    return sorted;
+  }
+
   bool _loading = false;
   bool get loading => _loading;
 

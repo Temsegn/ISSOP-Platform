@@ -68,6 +68,25 @@ async function main() {
       },
     });
 
+    // 5. Add 10 dummy Field Agents
+    console.log('Seeding 10 Field Agents...');
+    for (let i = 1; i <= 10; i++) {
+        await prisma.user.upsert({
+            where: { email: `agent${i}@issop.com` },
+            update: {},
+            create: {
+                name: `Agent ${i} (Field Unit)`,
+                email: `agent${i}@issop.com`,
+                password: hashedPassword,
+                role: 'AGENT',
+                phone: `091100000${i}`,
+                area: 'Bole City',
+                latitude: 8.98 + (Math.random() * 0.1),
+                longitude: 38.70 + (Math.random() * 0.1),
+            }
+        });
+    }
+
     console.log('✅ Seed completed successfully:');
     console.log('-> SuperAdmin:', superAdmin.email);
     console.log('-> Admin:', admin.email);

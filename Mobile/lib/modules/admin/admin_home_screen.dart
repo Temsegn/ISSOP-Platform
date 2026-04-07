@@ -91,12 +91,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('SuperAdmin Terminal', style: TextStyle(color: Color(0xFF1A1A2E), fontWeight: FontWeight.w900, fontSize: 28, letterSpacing: -1)),
+            Text('Admin Dashboard', style: const TextStyle(color: Color(0xFF1A1A2E), fontWeight: FontWeight.w900, fontSize: 28, letterSpacing: -1)),
             const SizedBox(height: 4),
             Row(children: [
               Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
               const SizedBox(width: 8),
-              Text('System Active', style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontWeight: FontWeight.w700)),
+              Text('Welcome, ${authVm.user?.name ?? 'Admin'}', style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontWeight: FontWeight.w700)),
             ]),
           ],
         ),
@@ -185,7 +185,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
 
   Widget _buildUserPanel(AdminViewModel vm) {
     if (vm.loading && vm.users.isEmpty) return const Center(child: CircularProgressIndicator());
-    final filtered = vm.users.where((u) => u.role != 'SUPERADMIN').toList();
+    final filtered = vm.users.where((u) => u.role == 'USER' || u.role == 'AGENT').toList();
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
