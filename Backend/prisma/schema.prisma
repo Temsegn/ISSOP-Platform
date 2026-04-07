@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CITIZEN
+  AGENT
+  ADMIN
+}
+
+enum RequestStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum NotificationType {
+  REQUEST_CREATED
+  TASK_ASSIGNED
+  STATUS_UPDATED
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          Role      @default(CITIZEN)
+  phone         String?
+  isDeleted     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  requests      Request[]      @relation("CitizenRequests")
+  assignedTasks Request[]      @relation("AgentTasks")
+  notifications Notification[]
+}
+
+model Request {
+  id          String        @id @default(uuid())
+  title       String
+  description String
+  category    String
+  status      RequestStatus @default(PENDING)
+  mediaUrls   String[]
+  latitude    Float
+  longitude   Float
+  address     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  citizenId   String
+  citizen     User          @relation("CitizenRequests", fields: [citizenId], references: [id])
+
+  agentId     String?
+  agent       User?         @relation("AgentTasks", fields: [agentId], references: [id])
+
+  notifications Notification[]
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+
+  requestId String?
+  request   Request?         @relation(fields: [requestId], references: [id])
+}
