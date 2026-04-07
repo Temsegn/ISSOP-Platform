@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:issop_mobile/core/models/user_model.dart';
+import 'package:issop_mobile/core/services/auth_service.dart';
+import 'package:issop_mobile/core/services/storage_service.dart';
 import 'package:issop_mobile/core/services/socket_service.dart';
 
 class AuthViewModel extends ChangeNotifier {

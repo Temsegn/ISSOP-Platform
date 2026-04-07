@@ -100,7 +100,7 @@ class _AdminRequestDetailScreenState extends State<AdminRequestDetailScreen> {
                       if (sortedAgents.isEmpty) return const Text('No agents found in database.', style: TextStyle(color: Colors.grey));
                       
                       return Column(
-                        children: sortedAgents.take(5).map((agent) => Container(
+                        children: sortedAgents.take(5).map((UserModel agent) => Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade100)),
                           child: ListTile(

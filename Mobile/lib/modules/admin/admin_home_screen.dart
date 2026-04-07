@@ -187,7 +187,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
 
   Widget _buildUserPanel(AdminViewModel vm) {
     if (vm.loading && vm.users.isEmpty) return const Center(child: CircularProgressIndicator());
-    final filtered = vm.users.where((u) => u.role == 'USER' || u.role == 'AGENT').toList();
+    final filtered = vm.users.where((UserModel u) => u.role == 'USER' || u.role == 'AGENT').toList();
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
