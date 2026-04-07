@@ -23,7 +23,7 @@ class AgentViewModel extends ChangeNotifier {
 
   void _initSocket() {
     _socketService.events.listen((event) {
-      if (event.name == 'task_assigned' || event.name == 'status_updated') {
+      if (event.name == 'task_assigned' || event.name == 'status_updated' || event.name == 'reconnected') {
         fetchTasks();
       }
     });

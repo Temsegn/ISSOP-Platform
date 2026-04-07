@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:issop_mobile/core/services/auth_service.dart';
@@ -95,13 +96,31 @@ class AppRoot extends StatefulWidget {
 class _AppRootState extends State<AppRoot> {
   final GlobalKey<ScaffoldMessengerState> _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
+  Timer? _syncHeartbeat;
+  
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
        context.read<AuthViewModel>().checkAuth();
        _initNotificationListener();
+       _startSyncHeartbeat();
     });
+  }
+
+  void _startSyncHeartbeat() {
+    _syncHeartbeat = Timer.periodic(const Duration(seconds: 15), (_) {
+       if (mounted) {
+         context.read<RequestViewModel>().syncPendingRequests();
+         context.read<AgentViewModel>().syncOfflineUpdates();
+       }
+    });
+  }
+
+  @override
+  void dispose() {
+    _syncHeartbeat?.cancel();
+    super.dispose();
   }
 
   void _initNotificationListener() {

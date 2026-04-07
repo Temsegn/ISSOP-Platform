@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           shadowColor: const Color(0xFF1A1A2E).withOpacity(0.5),
                         ),
                         child: const Text(
-                          'CONTINUE',
+                          'LOGIN',
                           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, letterSpacing: 2),
                         ),
                       ),

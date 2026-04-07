@@ -28,7 +28,7 @@ class RequestViewModel extends ChangeNotifier {
   void _initSocket() {
 
     _socketService.events.listen((event) {
-      if (event.name == 'status_updated') {
+      if (event.name == 'status_updated' || event.name == 'reconnected') {
         fetchMyRequests();
       }
     });

@@ -24,6 +24,7 @@ class SocketService {
 
     _socket!.onConnect((_) {
       print('Socket Connected to Backend');
+      _eventController.add(SocketEvent('reconnected', null));
     });
 
     _socket!.on('request_created', (data) => _eventController.add(SocketEvent('request_created', data)));
