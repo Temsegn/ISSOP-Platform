@@ -33,9 +33,31 @@ class App extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'ISSOP',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
-          colorSchemeSeed: Colors.blueAccent,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.indigo,
+            primary: Colors.indigo,
+            secondary: Colors.deepOrangeAccent,
+          ),
+          textTheme: const TextTheme(
+            headlineMedium: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.grey[50],
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.indigo, width: 2)),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.indigo,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
         ),
         home: Consumer<AuthViewModel>(
           builder: (context, auth, _) {
