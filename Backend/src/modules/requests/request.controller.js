@@ -11,6 +11,8 @@ class RequestController {
 
     const requestData = {
       ...req.body,
+      latitude: req.body.latitude ? parseFloat(req.body.latitude) : 0,
+      longitude: req.body.longitude ? parseFloat(req.body.longitude) : 0,
       // If files are uploaded via Cloudinary/multer, map their paths (Cloudinary URLs)
       mediaUrls: req.files && req.files.length > 0 
         ? req.files.map(file => file.path) 
@@ -78,3 +80,4 @@ class RequestController {
 }
 
 module.exports = new RequestController();
+

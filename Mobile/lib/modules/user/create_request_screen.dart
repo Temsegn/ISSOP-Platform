@@ -102,7 +102,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     }
 
     final vm = context.read<RequestViewModel>();
-    final success = await vm.createRequest(
+    final errorStr = await vm.createRequest(
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
       category: _selectedCategory,
@@ -113,7 +113,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     );
     
     if (mounted) {
-      if (success) {
+      if (errorStr == null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Row(
             children: [
@@ -128,7 +128,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
         ));
         Navigator.pop(context);
       } else {
-        _showError('Failed to submit request. Please try again.');
+        _showError('Failed: $errorStr');
       }
     }
   }

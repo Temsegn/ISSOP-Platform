@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:issop_mobile/core/services/request_service.dart';
 import 'package:geolocator/geolocator.dart';
@@ -48,7 +49,7 @@ class RequestViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> createRequest({
+  Future<String?> createRequest({
     required String title,
     required String description,
     required String category,
@@ -72,11 +73,18 @@ class RequestViewModel extends ChangeNotifier {
       await fetchMyRequests();
       _loading = false;
       notifyListeners();
-      return true;
+      return null; // Null means success
     } catch (e) {
       _loading = false;
       notifyListeners();
-      return false;
+      if (e is DioException) {
+        if (e.response != null && e.response?.data is Map) {
+           final Map data = e.response?.data;
+           return data['message'] ?? 'Server Error: ${e.response?.statusCode}';
+        }
+        return e.message ?? 'Network error';
+      }
+      return e.toString();
     }
   }
 }
