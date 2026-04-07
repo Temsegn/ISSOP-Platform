@@ -6,6 +6,7 @@ require('express-async-errors');
 
 const authRoutes = require('./modules/auth/auth.routes');
 const userRoutes = require('./modules/users/user.routes');
+const requestRoutes = require('./modules/requests/request.routes');
 const errorMiddleware = require('./middleware/error.middleware');
 
 const app = express();
@@ -23,6 +24,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/requests', requestRoutes);
 
 // Error Handling
 app.use(errorMiddleware);
