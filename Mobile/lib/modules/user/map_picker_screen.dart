@@ -90,11 +90,12 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         'https://nominatim.openstreetmap.org/search',
         queryParameters: {
           'q': query,
-          'format': 'jsonv2',
+          'format': 'json',
           'addressdetails': 1,
-          'limit': 6,
+          'limit': 20, // Increased limit for better selection
+          'accept-language': 'en',
         },
-        options: Options(headers: {'User-Agent': 'issop_mobile'})
+        options: Options(headers: {'User-Agent': 'ISSOP_Mobile_App_v1.0'})
       );
       if (response.statusCode == 200 && mounted) {
         final List data = response.data;
@@ -228,14 +229,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.issop.app',
+                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                subdomains: const ['a', 'b', 'c'],
+                userAgentPackageName: 'com.issop.issop_mobile',
                 maxZoom: 19,
-                errorTileCallback: (tile, error, stackTrace) {
-                  if (mounted && !_isOffline) {
-                    setState(() => _isOffline = true);
-                  }
-                },
               ),
             ],
           ),
