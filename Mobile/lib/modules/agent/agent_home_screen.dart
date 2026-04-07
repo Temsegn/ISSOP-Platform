@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:issop_mobile/viewmodels/auth_viewmodel.dart';
 import 'package:issop_mobile/viewmodels/agent_viewmodel.dart';
+import 'package:issop_mobile/viewmodels/notification_viewmodel.dart';
 import 'package:issop_mobile/core/models/request_model.dart';
 import 'package:intl/intl.dart';
 
@@ -179,6 +180,57 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
     );
   }
 
+  void _showNotifications(BuildContext context, NotificationViewModel notif) {
+    showModalBottomSheet(
+      context: context, 
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              Container(width: 50, height: 5, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10))),
+              const Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.notifications_active, color: Colors.blueAccent),
+                    SizedBox(width: 12),
+                    Text('Notifications', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                 child: notif.notifications.isEmpty 
+                 ? const Center(child: Text('No notifications yet', style: TextStyle(color: Colors.grey)))
+                 : ListView.builder(
+                     itemCount: notif.notifications.length,
+                     itemBuilder: (context, index) {
+                        final n = notif.notifications[index];
+                        final bool isRead = n['isRead'] == true;
+                        return ListTile(
+                           tileColor: isRead ? Colors.white : Colors.blue.shade50,
+                           leading: const Icon(Icons.circle, size: 12, color: Colors.blueAccent),
+                           title: Text(n['message'] ?? 'Notification', style: TextStyle(fontWeight: isRead ? FontWeight.normal : FontWeight.bold)),
+                           subtitle: Text(DateFormat('MMM dd, hh:mm a').format(DateTime.parse(n['createdAt'])), style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                           onTap: () {
+                              if (!isRead) notif.markAsRead(n['id']);
+                           },
+                        );
+                     }
+                   )
+              )
+            ],
+          )
+        );
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<AgentViewModel>();
@@ -208,6 +260,35 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
               icon: const Icon(Icons.refresh, color: Color(0xFF1A1A2E)),
               onPressed: () => vm.fetchTasks(),
             ),
+          ),
+          Consumer<NotificationViewModel>(
+            builder: (context, notif, _) {
+              return Stack(
+                children: [
+                   Container(
+                     margin: const EdgeInsets.only(right: 8),
+                     decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+                     child: IconButton(
+                       icon: const Icon(Icons.notifications_outlined, color: Color(0xFF1A1A2E)),
+                       onPressed: () {
+                         notif.fetchNotifications();
+                         _showNotifications(context, notif);
+                       },
+                     ),
+                   ),
+                   if (notif.unreadCount > 0)
+                     Positioned(
+                       right: 8,
+                       top: 0,
+                       child: Container(
+                         padding: const EdgeInsets.all(5),
+                         decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+                         child: Text('${notif.unreadCount}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                       )
+                     )
+                ]
+              );
+            }
           ),
           Container(
             margin: const EdgeInsets.only(right: 16),
