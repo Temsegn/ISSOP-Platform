@@ -245,11 +245,32 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         toolbarHeight: 80,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
-            Text('Hello, ${user?.name?.split(' ').first ?? 'Agent'}', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF1A1A2E), letterSpacing: -0.5)),
-            const Text('Here is your field dashboard', style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Hello, ${user?.name?.split(' ').first ?? 'Agent'}', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF1A1A2E), letterSpacing: -0.5)),
+                Row(
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.2, end: 1.0),
+                      duration: const Duration(seconds: 1),
+                      curve: Curves.easeInOut,
+                      onEnd: () {}, 
+                      builder: (context, value, child) {
+                        return Opacity(
+                          opacity: value,
+                          child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                    const Text('LIVE SYNC ACTIVE', style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
         actions: [
