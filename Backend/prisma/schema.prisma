@@ -22,6 +22,11 @@ enum RequestStatus {
   REJECTED
 }
 
+enum AgentStatus {
+  AVAILABLE
+  BUSY
+}
+
 enum NotificationType {
   REQUEST_CREATED
   TASK_ASSIGNED
@@ -41,6 +46,7 @@ model User {
   longitude     Float?
   area          String?
   lastLocationUpdate DateTime?
+  status        AgentStatus? @default(AVAILABLE)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

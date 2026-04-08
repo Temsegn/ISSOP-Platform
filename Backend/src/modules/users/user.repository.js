@@ -18,6 +18,7 @@ class UserRepository {
         latitude: true,
         longitude: true,
         lastLocationUpdate: true,
+        status: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -37,6 +38,7 @@ class UserRepository {
         latitude: true,
         longitude: true,
         lastLocationUpdate: true,
+        status: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -54,6 +56,7 @@ class UserRepository {
         role: true,
         phone: true,
         isActive: true,
+        status: true,
         updatedAt: true,
       },
     });
@@ -77,6 +80,7 @@ class UserRepository {
       SELECT *
       FROM AgentDistances
       WHERE role = 'AGENT' 
+        AND status = 'AVAILABLE'
         AND "isActive" = true 
         AND "isDeleted" = false
         AND latitude IS NOT NULL 

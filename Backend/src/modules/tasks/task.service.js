@@ -1,4 +1,5 @@
 const taskRepository = require('./task.repository');
+const userRepository = require('../users/user.repository');
 const notificationService = require('../notifications/notification.service');
 
 class TaskService {
@@ -7,9 +8,12 @@ class TaskService {
   }
 
   async acceptTask(taskId, agentId) {
-    // We already have generic status update in RequestService, but we'll do specialized logic here
+    // Report status becomes IN_PROGRESS
     const task = await taskRepository.updateStatus(taskId, agentId, 'IN_PROGRESS');
     
+    // Agent is already BUSY from assignment, but we'll ensure they're BUSY
+    await userRepository.update(agentId, { status: 'BUSY' });
+
     // Notify Citizen
     await notificationService.notifyCitizenStatusUpdated(
       task.citizenId, 
@@ -25,6 +29,9 @@ class TaskService {
     // Rejects it back to the pool
     const task = await taskRepository.rejectTask(taskId, agentId);
     
+    // Agent becomes AVAILABLE again
+    await userRepository.update(agentId, { status: 'AVAILABLE' });
+
     // Notify Citizen that it went back to pending
     await notificationService.notifyCitizenStatusUpdated(
       task.citizenId, 
@@ -37,9 +44,13 @@ class TaskService {
   }
 
   async completeTask(taskId, agentId, proofUrl) {
+    // Report status becomes COMPLETED
     const task = await taskRepository.updateStatus(taskId, agentId, 'COMPLETED', {
       completionProofUrl: proofUrl
     });
+
+    // Agent becomes AVAILABLE again
+    await userRepository.update(agentId, { status: 'AVAILABLE' });
 
     // Notify Citizen
     await notificationService.notifyCitizenStatusUpdated(

@@ -64,10 +64,16 @@ class RequestService {
   async assignRequest(requestId, agentId, currentUser) {
     const request = await this.getRequestById(requestId, currentUser);
 
-    // Verify agent exists and is actually an agent
+    // Verify agent exists, is an agent, and is available
     const agent = await userRepository.findById(agentId);
     if (!agent || agent.role !== 'AGENT') {
       const error = new Error('Invalid agent ID');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (agent.status !== 'AVAILABLE') {
+      const error = new Error('Agent is currently busy with another task');
       error.statusCode = 400;
       throw error;
     }
@@ -77,6 +83,9 @@ class RequestService {
        error.statusCode = 403;
        throw error;
     }
+
+    // Update agent status to BUSY
+    await userRepository.update(agentId, { status: 'BUSY' });
 
     const updatedRequest = await requestRepository.update(requestId, {
       agentId,
@@ -131,6 +140,17 @@ class RequestService {
     }
 
     const updatedRequest = await requestRepository.update(requestId, updateData);
+    
+    // Manage agent availability
+    if (updatedRequest.agentId) {
+      if (newStatus === 'COMPLETED' || newStatus === 'REJECTED') {
+          // Free the agent
+          await userRepository.update(updatedRequest.agentId, { status: 'AVAILABLE' });
+      } else if (newStatus === 'ASSIGNED' || newStatus === 'IN_PROGRESS') {
+          // Agent is busy
+          await userRepository.update(updatedRequest.agentId, { status: 'BUSY' });
+      }
+    }
 
     // Notify citizen about status update
     await notificationService.notifyCitizenStatusUpdated(request.citizenId, requestId, request.title, newStatus);
