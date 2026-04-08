@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Badge } from '@/components/ui/badge'
@@ -286,6 +286,36 @@ export function LiveMap({
 
       {radarCenter && <ScanningRadar center={radarCenter} />}
 
+      {/* Connection Lines to Nearby Agents */}
+      {radarCenter && nearbyAgents.map(agent => (
+        agent.location && (
+          <Polyline
+            key={`line-${agent.id}`}
+            positions={[
+              radarCenter,
+              [agent.location.lat, agent.location.lng]
+            ]}
+            pathOptions={{
+              color: '#10b981', // Green Light
+              weight: 2,
+              opacity: 0.6,
+              dashArray: '8, 12',
+            }}
+            className="moving-dash"
+          />
+        )
+      ))}
+      <style>{`
+        .moving-dash {
+          stroke-dasharray: 10, 20;
+          animation: dash-move 20s linear infinite;
+        }
+        @keyframes dash-move {
+          from { stroke-dashoffset: 1000; }
+          to { stroke-dashoffset: 0; }
+        }
+      `}</style>
+
       {/* Nearby Agent Highlights */}
       {radarCenter && nearbyAgents.map(agent => agent.location && (
         <Circle
@@ -394,18 +424,6 @@ export function LiveMap({
                 )}
               </div>
             </Popup>
-            {isSelected && (
-              <Circle
-                center={[request.latitude, request.longitude]}
-                radius={150}
-                pathOptions={{
-                  color: '#ef4444',
-                  fillColor: '#ef4444',
-                  fillOpacity: 0.1,
-                  weight: 2,
-                }}
-              />
-            )}
           </Marker>
         )
       })}

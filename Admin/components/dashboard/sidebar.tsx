@@ -60,7 +60,7 @@ const navItems: NavItem[] = [
     title: 'Users',
     href: '/dashboard/users',
     icon: Users,
-    roles: ['SUPERADMIN'],
+    roles: ['ADMIN', 'SUPERADMIN'],
   },
   {
     title: 'Role Management',

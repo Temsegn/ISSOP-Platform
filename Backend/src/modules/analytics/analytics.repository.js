@@ -25,6 +25,51 @@ class AnalyticsRepository {
       },
     });
 
+    const activeAgents = await prisma.user.count({
+      where: {
+        role: 'AGENT',
+        status: 'AVAILABLE',
+        isDeleted: false,
+        ...(areaFilter ? { area: areaFilter } : {})
+      }
+    });
+
+    // Trend data for the last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const trendRaw = await prisma.request.findMany({
+      where: {
+        ...where,
+        createdAt: { gte: sevenDaysAgo }
+      },
+      select: {
+        createdAt: true,
+        status: true
+      }
+    });
+
+    // Process trend data
+    const trendMap = new Map();
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      trendMap.set(dateStr, { date: dateStr, total: 0, completed: 0, pending: 0 });
+    }
+
+    trendRaw.forEach(req => {
+      const dateStr = req.createdAt.toISOString().split('T')[0];
+      if (trendMap.has(dateStr)) {
+        const stats = trendMap.get(dateStr);
+        stats.total++;
+        if (req.status === 'COMPLETED') stats.completed++;
+        if (req.status === 'PENDING') stats.pending++;
+      }
+    });
+
+    const trend = Array.from(trendMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+
     // Formatting outputs
     const formattedStatusCounts = {
       PENDING: 0,
@@ -39,18 +84,19 @@ class AnalyticsRepository {
     });
 
     const formattedCategoryCounts = categoryCounts.map(c => ({
-      category: c.category,
-      count: c._count.id
+      name: c.category.charAt(0) + c.category.slice(1).toLowerCase().replace('_', ' '),
+      value: c._count.id,
+      category: c.category
     }));
 
     return {
       totalRequests,
+      pendingRequests: formattedStatusCounts.PENDING,
+      completedRequests: formattedStatusCounts.COMPLETED,
+      activeAgents,
       statusCounts: formattedStatusCounts,
-      completedVsPending: {
-        COMPLETED: formattedStatusCounts.COMPLETED,
-        PENDING: formattedStatusCounts.PENDING
-      },
       categoryCounts: formattedCategoryCounts,
+      trend
     };
   }
 

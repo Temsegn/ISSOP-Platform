@@ -161,8 +161,8 @@ export default function DashboardPage() {
 
         <TabsContent value="analytics" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
-            <RequestsLineChart />
-            <CategoryPieChart />
+            <RequestsLineChart data={stats?.trend || []} />
+            <CategoryPieChart data={stats?.categoryCounts || []} />
           </div>
         </TabsContent>
       </Tabs>

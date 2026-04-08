@@ -84,11 +84,15 @@ export interface DashboardStats {
   completedRequests: number
   activeAgents: number
   avgCompletionTime?: string
+  statusCounts: Record<string, number>
+  categoryCounts: { name: string; value: number; category: string }[]
+  trend: RequestsTrend[]
 }
 
 export interface RequestsByCategory {
+  name: string
+  value: number
   category: string
-  count: number
 }
 
 export interface RequestsTrend {

@@ -504,7 +504,18 @@ export default function RequestsPage() {
                       <UserCog className="h-5 w-5 mr-2" />
                       Dispatch Field Agent
                     </Button>
-                    <Button variant="outline" onClick={() => setIsDetailOpen(false)} className="w-full h-11 border-border/50">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setViewMode('map')
+                        setIsDetailOpen(false)
+                      }} 
+                      className="w-full h-11 border-border/50 gap-2"
+                    >
+                      <MapPin className="h-4 w-4" />
+                      Track on Live Map
+                    </Button>
+                    <Button variant="ghost" onClick={() => setIsDetailOpen(false)} className="w-full h-11">
                       Close Window
                     </Button>
                   </div>
