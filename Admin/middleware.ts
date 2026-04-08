@@ -6,28 +6,35 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Define public paths that don't require authentication
-  const isPublicPath = pathname === '/login'
+  const isPublicPath = pathname === '/login' || pathname === '/'
 
   // If the path is protected and there's no token, redirect to login
   if (!isPublicPath && !token) {
-    // In a real app, we might also use localStorage, but Next.js middleware only sees cookies
-    // For now, let's allow it if we're using localStorage on client side, 
-    // but the clean way is using cookies for middleware.
-    
-    // return NextResponse.redirect(new URL('/login', request.url))
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
   // If the user visits login and already has a token, redirect to dashboard
-  if (isPublicPath && token) {
+  if (pathname === '/login' && token) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  // Redirect root to dashboard if authenticated, otherwise to login
+  if (pathname === '/') {
+    if (token) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    } else {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
   }
 
   return NextResponse.next()
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
+    '/',
     '/dashboard/:path*',
     '/login',
   ],

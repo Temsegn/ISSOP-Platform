@@ -10,26 +10,38 @@ class SocketService {
     if (this.socket?.connected) return
 
     const token = api.getToken()
-    if (!token) return
+    if (!token) {
+      console.warn('[Socket] No token available, skipping connection')
+      return
+    }
 
     this.socket = io(SOCKET_URL, {
       auth: { token },
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      timeout: 10000,
     })
 
     this.socket.on('connect', () => {
-      console.log('[Socket] Connected to ISSOP Real-time Hub')
+      console.log('[Socket] ✓ Connected to ISSOP Real-time Hub')
     })
 
     this.socket.on('disconnect', (reason) => {
       console.log('[Socket] Disconnected:', reason)
+      if (reason === 'io server disconnect') {
+        // Server disconnected, try to reconnect
+        this.socket?.connect()
+      }
     })
 
     this.socket.on('connect_error', (error) => {
       console.error('[Socket] Connection Error:', error.message)
+    })
+
+    this.socket.on('error', (error) => {
+      console.error('[Socket] Error:', error)
     })
   }
 

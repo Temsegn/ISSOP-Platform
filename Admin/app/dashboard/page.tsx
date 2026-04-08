@@ -39,21 +39,33 @@ export default function DashboardPage() {
         ])
 
         console.log('[Dashboard] Raw Summary Stats:', statsRes)
-        console.log('[Dashboard] Raw Requests:', requestsRes.data.length)
+        console.log('[Dashboard] Raw Requests:', requestsRes.data?.length || 0)
 
-        setStats(statsRes.data)
-        setRequests(requestsRes.data)
-        setNotifications(notifsRes.data)
-        const agentsList = usersRes.data.filter(u => u.role === 'AGENT')
+        // Handle stats data properly
+        if (statsRes.data) {
+          setStats(statsRes.data)
+        }
+        
+        setRequests(requestsRes.data || [])
+        setNotifications(notifsRes.data || [])
+        const agentsList = (usersRes.data || []).filter(u => u.role === 'AGENT')
         setAgents(agentsList)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching dashboard data:', error)
+        
+        // Don't show error toast for 401 (handled by api.ts redirect)
+        if (!error.message?.includes('Session expired')) {
+          toast.error('Failed to load dashboard data')
+        }
       } finally {
         setLoading(false)
       }
     }
 
     fetchData()
+
+    // Connect socket for real-time updates
+    socketService.connect()
 
     // Real-time Listeners
     socketService.on('notification_received', (notif) => {
@@ -81,28 +93,28 @@ export default function DashboardPage() {
   const kpis = stats ? [
     {
       title: 'Total Requests',
-      value: stats.totalRequests,
+      value: stats.totalRequests || 0,
       change: 0, // Backend could provide this later
       icon: FileText,
       iconColor: 'text-primary',
     },
     {
       title: 'Pending',
-      value: stats.pendingRequests,
+      value: stats.pendingRequests || 0,
       change: 0,
       icon: Clock,
       iconColor: 'text-warning',
     },
     {
       title: 'Completed',
-      value: stats.completedRequests,
+      value: stats.completedRequests || 0,
       change: 0,
       icon: CheckCircle,
       iconColor: 'text-success',
     },
     {
       title: 'Active Agents',
-      value: stats.activeAgents,
+      value: stats.activeAgents || 0,
       change: 0,
       icon: Users,
       iconColor: 'text-accent',

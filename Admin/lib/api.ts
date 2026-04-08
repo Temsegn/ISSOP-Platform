@@ -69,6 +69,20 @@ class ApiService {
     })
 
     if (!response.ok) {
+      // Handle 401 Unauthorized - invalid/expired token
+      if (response.status === 401) {
+        console.warn('[API] 401 Unauthorized - clearing invalid token')
+        this.setToken(null)
+        this.clearCache()
+        
+        // Redirect to login if in browser
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+        
+        throw new Error('Session expired. Please login again.')
+      }
+
       const error = await response.json().catch(() => ({ message: 'Request failed' }))
       throw new Error(error.message || `HTTP error! status: ${response.status}`)
     }

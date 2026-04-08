@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Shield, Mail, Lock, ArrowRight, Loader2, Info, Building2, MapPin, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -12,10 +12,20 @@ import { toast } from 'sonner'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [step, setStep] = useState(1)
+
+  // Clear any old/invalid tokens on mount
+  useEffect(() => {
+    api.setToken(null)
+    
+    // Show message if redirected due to expired session
+    if (searchParams.get('redirect')) {
+      toast.info('Session expired. Please login again.')
+    }
+  }, [searchParams])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,9 +47,10 @@ export default function LoginPage() {
         api.setToken(token)
         toast.success(`Welcome back, ${user.name}!`)
         
-        // Brief delay for the toast and transition
+        // Redirect to original page or dashboard
+        const redirectTo = searchParams.get('redirect') || '/dashboard'
         setTimeout(() => {
-          router.push('/dashboard')
+          router.push(redirectTo)
         }, 800)
       }
     } catch (error: any) {
