@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [agents, setAgents] = useState<User[]>([])
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [loading, setLoading] = useState(true)
+  const [showDebug, setShowDebug] = useState(false) // Debug panel toggle
 
   useEffect(() => {
     async function fetchData(force = false) {
@@ -160,6 +161,24 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Debug Panel - Remove in production */}
+      {showDebug && stats && (
+        <div className="rounded-lg border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-950 p-4">
+          <h3 className="font-bold text-yellow-900 dark:text-yellow-100 mb-2">🐛 Debug Info</h3>
+          <pre className="text-xs overflow-auto max-h-40 bg-black/10 p-2 rounded">
+            {JSON.stringify({
+              totalRequests: stats.totalRequests,
+              pendingRequests: stats.pendingRequests,
+              completedRequests: stats.completedRequests,
+              activeAgents: stats.activeAgents,
+              statusCounts: stats.statusCounts,
+              requestsArrayLength: requests.length,
+              agentsArrayLength: agents.length
+            }, null, 2)}
+          </pre>
+        </div>
+      )}
+
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -173,9 +192,18 @@ export default function DashboardPage() {
             Real-time insights from the ISSOP Platform.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-medium text-success bg-success/10 px-2 py-1 rounded-full border border-success/20">
-          <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-          Live Connection
+        <div className="flex items-center gap-2">
+          {/* Debug Toggle Button */}
+          <button
+            onClick={() => setShowDebug(!showDebug)}
+            className="text-xs px-2 py-1 rounded bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300"
+          >
+            {showDebug ? 'Hide' : 'Show'} Debug
+          </button>
+          <div className="flex items-center gap-2 text-xs font-medium text-success bg-success/10 px-2 py-1 rounded-full border border-success/20">
+            <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+            Live Connection
+          </div>
         </div>
       </motion.div>
 
