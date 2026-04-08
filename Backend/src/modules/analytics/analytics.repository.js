@@ -77,8 +77,6 @@ class AnalyticsRepository {
         } : {})
       }
     });
-      }
-    });
 
     // Trend data for the last 7 days
     const sevenDaysAgo = new Date();

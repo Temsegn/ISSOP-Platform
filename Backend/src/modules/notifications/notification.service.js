@@ -19,11 +19,23 @@ class NotificationService {
   }
 
   async notifyCitizenStatusUpdated(citizenId, requestId, requestTitle, newStatus) {
+    // Determine message based on status
+    let message;
+    if (newStatus === 'COMPLETED') {
+      message = `✅ Great news! Your request "${requestTitle}" has been completed. Thank you for using ISSOP!`;
+    } else if (newStatus === 'IN_PROGRESS') {
+      message = `🔧 Your request "${requestTitle}" is now being worked on by our team.`;
+    } else if (newStatus === 'REJECTED') {
+      message = `❌ Your request "${requestTitle}" has been rejected. Please contact support for more information.`;
+    } else {
+      message = `The status of your request "${requestTitle}" has been updated to: ${newStatus}.`;
+    }
+
     const notification = await notificationRepository.create({
       userId: citizenId,
       requestId,
       type: 'STATUS_UPDATED',
-      message: `The status of your request "${requestTitle}" has been updated to: ${newStatus}.`,
+      message,
     });
 
     // Real-time update
