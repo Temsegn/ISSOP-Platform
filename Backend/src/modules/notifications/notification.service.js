@@ -1,4 +1,5 @@
 const notificationRepository = require('./notification.repository');
+const userRepository = require('../users/user.repository');
 const socketService = require('../../config/socket');
 
 class NotificationService {
@@ -49,15 +50,28 @@ class NotificationService {
   }
 
   async notifyAdminsRequestCreated(requestId, requestTitle, area) {
-    // We don't create persistent notifications for admins (too many), 
-    // but we can broadcast a real-time event to localized admins.
-    
-    // Broadcast to global admins room and localized area room
+    // Fetch all Admins and SuperAdmins to create persistent alerts
+    const adminUsers = await userRepository.findAll({
+      role: { in: ['ADMIN', 'SUPERADMIN'] },
+    });
+
+    const createPromises = adminUsers.map(admin => {
+      return notificationRepository.create({
+        userId: admin.id,
+        requestId,
+        type: 'REQUEST_CREATED',
+        message: `System Alert: A new request "${requestTitle}" has been submitted ${area ? `in ${area}` : 'globally'}.`,
+      }).then(notification => {
+        // Real-time update for each logged-in admin
+        socketService.emitToUser(admin.id, 'notification_received', notification);
+      });
+    });
+
+    await Promise.all(createPromises);
+
+    // Legacy broadcast for general room listeners
     const eventData = { requestId, requestTitle, area };
     socketService.emitToRoom('admins', 'request_created', eventData);
-    if (area) {
-      socketService.emitToRoom(`admin_area_${area}`, 'request_created', eventData);
-    }
   }
 
   async getUserNotifications(userId) {
