@@ -39,7 +39,7 @@ const baseRequest = {
 
 const mockAgent = {
   id: 'agt1', name: 'Agent X', role: 'AGENT', area: 'Central',
-  email: 'agent@issop.com', isActive: true, isDeleted: false,
+  email: 'agent@issop.com', status: 'AVAILABLE', isActive: true, isDeleted: false,
 };
 
 // ─── SUITE 1: Auth ─────────────────────────────────────────────────────────────

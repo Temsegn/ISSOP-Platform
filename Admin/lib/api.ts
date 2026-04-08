@@ -21,8 +21,10 @@ class ApiService {
     if (typeof window !== 'undefined') {
       if (token) {
         localStorage.setItem('auth_token', token)
+        document.cookie = `auth_token=${token}; path=/; max-age=${30 * 24 * 60 * 60}; samesite=lax`
       } else {
         localStorage.removeItem('auth_token')
+        document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
       }
     }
   }
@@ -30,6 +32,9 @@ class ApiService {
   getToken(): string | null {
     if (this.token) return this.token
     if (typeof window !== 'undefined') {
+      // Try to get from cookie first for consistency with middleware
+      const match = document.cookie.match(/(^| )auth_token=([^;]+)/)
+      if (match) return match[2]
       return localStorage.getItem('auth_token')
     }
     return null
@@ -75,7 +80,6 @@ class ApiService {
   }
 
   async logout(): Promise<void> {
-    await this.request('/auth/logout', { method: 'POST' })
     this.setToken(null)
   }
 
@@ -98,16 +102,9 @@ class ApiService {
     return this.request(`/users/${id}`)
   }
 
-  async createUser(data: Partial<User> & { password: string }): Promise<ApiResponse<User>> {
-    return this.request('/users', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
-  }
-
   async updateUser(id: string, data: Partial<User>): Promise<ApiResponse<User>> {
     return this.request(`/users/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     })
   }
@@ -121,10 +118,6 @@ class ApiService {
       method: 'PATCH',
       body: JSON.stringify({ role }),
     })
-  }
-
-  async toggleUserStatus(id: string): Promise<ApiResponse<User>> {
-    return this.request(`/users/${id}/toggle-status`, { method: 'PATCH' })
   }
 
   // Request endpoints
@@ -142,112 +135,41 @@ class ApiService {
     return this.request(`/requests/${id}`)
   }
 
-  async createRequest(data: Partial<Request>): Promise<ApiResponse<Request>> {
-    return this.request('/requests', {
-      method: 'POST',
-      body: JSON.stringify(data),
+  async assignRequest(requestId: string, agentId: string): Promise<ApiResponse<Request>> {
+    return this.request(`/requests/${requestId}/assign`, {
+      method: 'PATCH',
+      body: JSON.stringify({ agentId }),
     })
   }
 
-  async updateRequest(id: string, data: Partial<Request>): Promise<ApiResponse<Request>> {
-    return this.request(`/requests/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    })
-  }
-
-  async updateRequestStatus(id: string, status: Request['status'], note?: string): Promise<ApiResponse<Request>> {
+  async updateRequestStatus(id: string, status: Request['status']): Promise<ApiResponse<Request>> {
     return this.request(`/requests/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status, note }),
+      body: JSON.stringify({ status }),
     })
   }
 
-  // Task endpoints
-  async getTasks(params?: PaginationParams): Promise<ApiResponse<Task[]>> {
-    const queryParams = new URLSearchParams()
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) queryParams.append(key, String(value))
-      })
-    }
-    return this.request(`/tasks?${queryParams.toString()}`)
+  // Location/Agents endpoints
+  async getNearestAgents(lat: number, lon: number, radius?: number): Promise<ApiResponse<User[]>> {
+    return this.request(`/users/nearest-agents?lat=${lat}&lon=${lon}${radius ? `&radius=${radius}` : ''}`)
   }
 
-  async getTask(id: string): Promise<ApiResponse<Task>> {
-    return this.request(`/tasks/${id}`)
+  // Analytics endpoints
+  async getSummaryStats(): Promise<ApiResponse<DashboardStats>> {
+    return this.request('/analytics/summary')
   }
 
-  async assignTask(requestId: string, agentId: string): Promise<ApiResponse<Task>> {
-    return this.request('/tasks/assign', {
-      method: 'POST',
-      body: JSON.stringify({ requestId, agentId }),
-    })
-  }
-
-  async updateTaskStatus(id: string, status: Task['status'], notes?: string): Promise<ApiResponse<Task>> {
-    return this.request(`/tasks/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status, notes }),
-    })
-  }
-
-  // Agent endpoints
-  async getAgents(params?: PaginationParams): Promise<ApiResponse<Agent[]>> {
-    const queryParams = new URLSearchParams()
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) queryParams.append(key, String(value))
-      })
-    }
-    return this.request(`/agents?${queryParams.toString()}`)
-  }
-
-  async getAgent(id: string): Promise<ApiResponse<Agent>> {
-    return this.request(`/agents/${id}`)
-  }
-
-  async getNearestAgents(lat: number, lng: number, limit?: number): Promise<ApiResponse<Agent[]>> {
-    return this.request(`/agents/nearest?lat=${lat}&lng=${lng}${limit ? `&limit=${limit}` : ''}`)
-  }
-
-  async updateAgentLocation(id: string, lat: number, lng: number): Promise<ApiResponse<Agent>> {
-    return this.request(`/agents/${id}/location`, {
-      method: 'PATCH',
-      body: JSON.stringify({ lat, lng }),
-    })
+  async getAgentPerformance(): Promise<ApiResponse<{ agentId: string; name: string; completed: number; avgTime: string }[]>> {
+    return this.request('/analytics/agents')
   }
 
   // Notification endpoints
-  async getNotifications(params?: { unreadOnly?: boolean }): Promise<ApiResponse<Notification[]>> {
-    const queryParams = new URLSearchParams()
-    if (params?.unreadOnly) queryParams.append('unreadOnly', 'true')
-    return this.request(`/notifications?${queryParams.toString()}`)
+  async getNotifications(): Promise<ApiResponse<Notification[]>> {
+    return this.request('/notifications')
   }
 
   async markNotificationRead(id: string): Promise<ApiResponse<Notification>> {
     return this.request(`/notifications/${id}/read`, { method: 'PATCH' })
-  }
-
-  async markAllNotificationsRead(): Promise<ApiResponse<void>> {
-    return this.request('/notifications/read-all', { method: 'PATCH' })
-  }
-
-  // Analytics endpoints
-  async getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
-    return this.request('/analytics/dashboard')
-  }
-
-  async getRequestsByCategory(): Promise<ApiResponse<RequestsByCategory[]>> {
-    return this.request('/analytics/requests-by-category')
-  }
-
-  async getRequestsTrend(days?: number): Promise<ApiResponse<RequestsTrend[]>> {
-    return this.request(`/analytics/requests-trend${days ? `?days=${days}` : ''}`)
-  }
-
-  async getAgentPerformance(): Promise<ApiResponse<{ agentId: string; name: string; completed: number; avgTime: number }[]>> {
-    return this.request('/analytics/agent-performance')
   }
 }
 

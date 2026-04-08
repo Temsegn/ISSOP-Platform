@@ -37,13 +37,13 @@ const createIcon = (color: string) => {
   })
 }
 
-const createAgentIcon = (availability: string, initials: string) => {
-  const colors = {
+const createAgentIcon = (availability: string) => {
+  const statusColors = {
     AVAILABLE: '#22c55e',
     BUSY: '#f59e0b',
     OFFLINE: '#6b7280',
   }
-  const color = colors[availability as keyof typeof colors] || '#6b7280'
+  const statusColor = statusColors[availability as keyof typeof statusColors] || '#6b7280'
   
   return L.divIcon({
     className: 'agent-marker',
@@ -52,33 +52,57 @@ const createAgentIcon = (availability: string, initials: string) => {
         position: relative;
         width: 40px;
         height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       ">
         <div style="
-          width: 40px;
-          height: 40px;
-          background: linear-gradient(135deg, hsl(250, 80%, 55%), hsl(280, 75%, 50%));
+          width: 36px;
+          height: 36px;
+          background: #22c55e;
           border: 3px solid white;
           border-radius: 50%;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+          box-shadow: 0 0 15px rgba(34, 197, 94, 0.5), 0 4px 10px rgba(0,0,0,0.3);
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
-          font-weight: 600;
-          font-size: 12px;
-          font-family: system-ui, sans-serif;
-        ">${initials}</div>
+          font-weight: 800;
+          font-size: 18px;
+          font-family: 'Inter', system-ui, sans-serif;
+          z-index: 2;
+        ">A</div>
         <div style="
           position: absolute;
-          bottom: -2px;
-          right: -2px;
-          width: 14px;
-          height: 14px;
-          background: ${color};
+          bottom: 2px;
+          right: 2px;
+          width: 12px;
+          height: 12px;
+          background: ${statusColor};
           border: 2px solid white;
           border-radius: 50%;
+          z-index: 3;
         "></div>
+        ${availability === 'AVAILABLE' ? `
+          <div style="
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(34, 197, 94, 0.3);
+            border-radius: 50%;
+            animation: pulse-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+            z-index: 1;
+          "></div>
+        ` : ''}
       </div>
+      <style>
+        @keyframes pulse-ping {
+          75%, 100% {
+            transform: scale(1.5);
+            opacity: 0;
+          }
+        }
+      </style>
     `,
     iconSize: [40, 40],
     iconAnchor: [20, 20],

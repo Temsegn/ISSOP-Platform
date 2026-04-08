@@ -14,7 +14,7 @@ const notificationService = require('../../src/modules/notifications/notificatio
 const mockCitizen = { id: 'cit1', role: 'USER', isActive: true, isDeleted: false };
 const mockAdmin = { id: 'admin1', role: 'ADMIN', area: 'Central', isActive: true };
 const mockSuperAdmin = { id: 'super1', role: 'SUPERADMIN', isActive: true };
-const mockAgent = { id: 'agt1', role: 'AGENT', area: 'Central', email: 'ag@t.com', isDeleted: false };
+const mockAgent = { id: 'agt1', role: 'AGENT', area: 'Central', email: 'ag@t.com', status: 'AVAILABLE', isDeleted: false };
 
 const baseRequest = {
   id: 'req1',
@@ -146,7 +146,7 @@ describe('RequestService', () => {
       prismaMock.request.findUnique.mockResolvedValue({ ...baseRequest, status: 'IN_PROGRESS', agentId: 'agt1' });
       prismaMock.request.update.mockResolvedValue({ ...baseRequest, status: 'COMPLETED' });
 
-      const result = await requestService.updateRequestStatus('req1', 'COMPLETED', mockSuperAdmin);
+      const result = await requestService.updateRequestStatus('req1', 'COMPLETED', mockSuperAdmin, 'http://proof.com/img.jpg');
       expect(result.status).toBe('COMPLETED');
     });
   });

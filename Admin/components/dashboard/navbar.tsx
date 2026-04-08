@@ -14,9 +14,13 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { useRouter } from 'next/navigation'
+import { api } from '@/lib/api'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { toggleMobileSidebar } from '@/store/slices/uiSlice'
+import { logout } from '@/store/slices/authSlice'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -73,6 +77,7 @@ const mockNotifications: Notification[] = [
 ]
 
 export function DashboardNavbar() {
+  const router = useRouter()
   const dispatch = useAppDispatch()
   const { sidebarCollapsed } = useAppSelector((state) => state.ui)
   const { user } = useAppSelector((state) => state.auth)
@@ -97,14 +102,24 @@ export function DashboardNavbar() {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
   }
 
+  const handleLogout = async () => {
+    try {
+      await dispatch(logout()).unwrap()
+      router.push('/login')
+      toast.success('Successfully logged out')
+    } catch (error) {
+      toast.error('Logout failed. Please try again.')
+    }
+  }
+
   // Demo user data
   const displayUser = user || {
-    firstName: 'Admin',
-    lastName: 'User',
+    name: 'Admin User',
     email: 'admin@issop.city',
     role: 'SUPERADMIN',
-    avatar: null,
   }
+
+  const initials = displayUser.name.split(' ').map(n => n[0]).join('')
 
   return (
     <motion.header
@@ -263,15 +278,14 @@ export function DashboardNavbar() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 gap-2 px-2">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={displayUser.avatar || undefined} />
+                <AvatarImage src={(displayUser as any).avatar || undefined} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {displayUser.firstName[0]}
-                  {displayUser.lastName[0]}
+                  {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="hidden lg:flex flex-col items-start">
+              <div className="hidden lg:flex flex-col items-start text-left">
                 <span className="text-sm font-medium">
-                  {displayUser.firstName} {displayUser.lastName}
+                  {displayUser.name}
                 </span>
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                   {displayUser.role}
@@ -283,7 +297,7 @@ export function DashboardNavbar() {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium">
-                  {displayUser.firstName} {displayUser.lastName}
+                  {displayUser.name}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {displayUser.email}
@@ -304,7 +318,10 @@ export function DashboardNavbar() {
               Help Center
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive focus:text-destructive">
+            <DropdownMenuItem 
+              className="text-destructive focus:text-destructive cursor-pointer font-medium"
+              onClick={handleLogout}
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
