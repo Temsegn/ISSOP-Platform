@@ -38,4 +38,5 @@ export function getRoleFromToken(token: string): UserRole | null {
 // ── Role routing maps ─────────────────────────────────────────────────────────
 export const PROTECTED_ROUTES       = ["/dashboard", "/requests", "/tasks", "/users", "/analytics", "/settings"];
 export const PUBLIC_ROUTES          = ["/login"];
+// Updated to match Backend Prisma enum uppercase
 export const SUPERADMIN_ONLY_ROUTES = ["/users", "/analytics", "/settings"];

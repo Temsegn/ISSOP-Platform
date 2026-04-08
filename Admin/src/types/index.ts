@@ -18,69 +18,56 @@ export interface DecodedToken {
 }
 
 // ─── User ─────────────────────────────────────────────────────────────────────
-export type UserRole = "admin" | "agent" | "citizen";
-export type UserStatus = "active" | "inactive" | "suspended";
+// Aligned with backend prisma/schema.prisma
+export type UserRole = "SUPERADMIN" | "ADMIN" | "AGENT" | "USER";
 
 export interface User {
-  _id: string;
+  id: string;
   name: string;
   email: string;
   phone?: string;
   role: UserRole;
-  status: UserStatus;
+  isActive: boolean;
   avatar?: string;
-  region?: string;
+  area?: string;
+  latitude?: number;
+  longitude?: number;
   createdAt: string;
   updatedAt: string;
 }
 
 // ─── Request ──────────────────────────────────────────────────────────────────
-export type RequestStatus = "pending" | "assigned" | "in_progress" | "resolved" | "rejected";
-export type RequestPriority = "low" | "medium" | "high" | "critical";
-export type RequestCategory =
-  | "infrastructure"
-  | "public_safety"
-  | "environment"
-  | "health"
-  | "education"
-  | "other";
-
-export interface GeoLocation {
-  type: "Point";
-  coordinates: [number, number]; // [lng, lat]
-}
+// Aligned with backend RequestStatus enum
+export type RequestStatus = "PENDING" | "ASSIGNED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED";
 
 export interface ServiceRequest {
-  _id: string;
+  id: string;
   title: string;
   description: string;
-  category: RequestCategory;
-  priority: RequestPriority;
+  category: string;
   status: RequestStatus;
-  location: GeoLocation;
+  latitude: number;
+  longitude: number;
   address?: string;
-  media?: string[];
-  submittedBy: User | string;
-  assignedTo?: User | string;
+  mediaUrls?: string[];
+  citizenId: string;
+  citizen?: User;
+  agentId?: string;
+  agent?: User;
   createdAt: string;
   updatedAt: string;
-  resolvedAt?: string;
 }
 
 // ─── Task ─────────────────────────────────────────────────────────────────────
-export type TaskStatus = "open" | "in_progress" | "completed" | "cancelled";
-
 export interface Task {
-  _id: string;
+  id: string;
   title: string;
   description: string;
-  request: ServiceRequest | string;
-  assignedTo: User | string;
-  assignedBy: User | string;
-  status: TaskStatus;
-  dueDate?: string;
-  completedAt?: string;
-  notes?: string;
+  requestId: string;
+  request?: ServiceRequest;
+  agentId: string;
+  agent?: User;
+  status: RequestStatus; // Using common status as per prisma schema
   createdAt: string;
   updatedAt: string;
 }
@@ -96,19 +83,19 @@ export interface DashboardStats {
   requestsByCategory: { category: string; count: number }[];
   requestsByStatus: { status: string; count: number }[];
   requestsOverTime: { date: string; count: number }[];
-  topRegions: { region: string; count: number }[];
 }
 
 // ─── Notification ─────────────────────────────────────────────────────────────
-export type NotificationKind = "info" | "success" | "warning" | "error";
+export type NotificationKind = "REQUEST_CREATED" | "TASK_ASSIGNED" | "STATUS_UPDATED";
 
 export interface Notification {
-  _id: string;
-  title: string;
+  id: string;
+  type: NotificationKind;
   message: string;
-  kind: NotificationKind;
-  read: boolean;
+  isRead: boolean;
   createdAt: string;
+  userId: string;
+  requestId?: string;
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────

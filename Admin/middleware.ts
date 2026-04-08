@@ -31,9 +31,10 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // ── 4. SuperAdmin-only route guard ────────────────────────────────────────
+  // ── 4. Role gate for Admin/SuperAdmin only routes ────────────────────────
   if (SUPERADMIN_ONLY_ROUTES.some((r) => pathname.startsWith(r))) {
-    if (role !== "superadmin" && role !== "admin") {
+    // Backend uses SUPERADMIN and ADMIN
+    if (role !== "SUPERADMIN" && role !== "ADMIN") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
   }
