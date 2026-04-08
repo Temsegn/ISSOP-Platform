@@ -137,7 +137,10 @@ export function DashboardSidebar() {
         <ScrollArea className="flex-1 px-3 py-4">
           <nav className="flex flex-col gap-1">
             {filteredNavItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+              // Improved active state detection
+              const isActive = item.href === '/dashboard' 
+                ? pathname === '/dashboard'
+                : pathname.startsWith(item.href)
               const Icon = item.icon
 
               const linkContent = (
@@ -150,6 +153,14 @@ export function DashboardSidebar() {
                       : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   )}
                 >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeIndicator"
+                      className="absolute inset-0 rounded-lg bg-sidebar-primary"
+                      style={{ zIndex: -1 }}
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
                   <Icon
                     className={cn(
                       'h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110',
@@ -169,14 +180,6 @@ export function DashboardSidebar() {
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeIndicator"
-                      className="absolute inset-0 rounded-lg bg-sidebar-primary"
-                      style={{ zIndex: -1 }}
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
                 </Link>
               )
 
