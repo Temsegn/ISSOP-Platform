@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus,
@@ -16,6 +16,7 @@ import {
   Mail,
   Phone,
   Calendar,
+  RefreshCw,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,9 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Switch } from '@/components/ui/switch'
+import { Skeleton } from '@/components/ui/skeleton'
+import { toast } from 'sonner'
+import { api } from '@/lib/api'
 import {
   Dialog,
   DialogContent,
@@ -58,118 +62,54 @@ import {
 import { FieldGroup, Field, FieldLabel } from '@/components/ui/field'
 import type { User as UserType, UserRole } from '@/lib/types'
 
-interface MockUser extends UserType {
-  phone?: string
-  createdAt: string
-}
-
-const mockUsers: MockUser[] = [
-  {
-    id: '1',
-    email: 'admin@issop.city',
-    firstName: 'Admin',
-    lastName: 'User',
-    role: 'SUPERADMIN',
-    isActive: true,
-    phone: '+1 555-0100',
-    createdAt: '2023-06-15T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: '2',
-    email: 'maria@issop.city',
-    firstName: 'Maria',
-    lastName: 'Garcia',
-    role: 'AGENT',
-    isActive: true,
-    phone: '+1 555-0101',
-    createdAt: '2023-08-20T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: '3',
-    email: 'john@issop.city',
-    firstName: 'John',
-    lastName: 'Smith',
-    role: 'ADMIN',
-    isActive: true,
-    phone: '+1 555-0102',
-    createdAt: '2023-09-10T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: '4',
-    email: 'sarah@city.gov',
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    role: 'CITIZEN',
-    isActive: true,
-    phone: '+1 555-0103',
-    createdAt: '2023-10-05T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: '5',
-    email: 'carlos@issop.city',
-    firstName: 'Carlos',
-    lastName: 'Rodriguez',
-    role: 'AGENT',
-    isActive: false,
-    phone: '+1 555-0104',
-    createdAt: '2023-11-15T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: '6',
-    email: 'emily@city.gov',
-    firstName: 'Emily',
-    lastName: 'Chen',
-    role: 'CITIZEN',
-    isActive: true,
-    phone: '+1 555-0105',
-    createdAt: '2023-12-01T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: '7',
-    email: 'mike@issop.city',
-    firstName: 'Mike',
-    lastName: 'Davis',
-    role: 'ADMIN',
-    isActive: true,
-    phone: '+1 555-0106',
-    createdAt: '2024-01-05T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z',
-  },
-]
-
-const roleIcons: Record<UserRole, typeof User> = {
+const roleIcons: Record<string, typeof User> = {
   SUPERADMIN: Shield,
   ADMIN: UserCog,
   AGENT: Users,
-  CITIZEN: User,
+  USER: User,
 }
 
-const roleColors: Record<UserRole, string> = {
+const roleColors: Record<string, string> = {
   SUPERADMIN: 'bg-destructive/10 text-destructive border-destructive/20',
   ADMIN: 'bg-primary/10 text-primary border-primary/20',
   AGENT: 'bg-accent/10 text-accent border-accent/20',
-  CITIZEN: 'bg-muted text-muted-foreground border-border',
+  USER: 'bg-muted text-muted-foreground border-border',
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState(mockUsers)
+  const [users, setUsers] = useState<UserType[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('all')
-  const [selectedUser, setSelectedUser] = useState<MockUser | null>(null)
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [userToDelete, setUserToDelete] = useState<MockUser | null>(null)
+  const [userToDelete, setUserToDelete] = useState<UserType | null>(null)
+
+  const fetchData = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true)
+      else setLoading(true)
+      const res = await api.getUsers()
+      setUsers(res.data)
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      toast.error('Failed to load users')
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   const filteredUsers = users.filter((user) => {
+    const nameStr = user.name || 'Unnamed'
     const matchesSearch =
-      user.firstName.toLowerCase().includes(search.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(search.toLowerCase()) ||
+      nameStr.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase())
     const matchesRole = roleFilter === 'all' || user.role === roleFilter
     return matchesSearch && matchesRole
@@ -179,13 +119,14 @@ export default function UsersPage() {
     total: users.length,
     admins: users.filter((u) => u.role === 'ADMIN' || u.role === 'SUPERADMIN').length,
     agents: users.filter((u) => u.role === 'AGENT').length,
-    citizens: users.filter((u) => u.role === 'CITIZEN').length,
+    citizens: users.filter((u) => u.role === 'USER').length,
   }
 
   const toggleUserStatus = (userId: string) => {
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, isActive: !u.isActive } : u))
     )
+    toast.info('Status toggled (Demo)')
   }
 
   const handleDeleteUser = () => {
@@ -193,7 +134,36 @@ export default function UsersPage() {
       setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id))
       setUserToDelete(null)
       setIsDeleteOpen(false)
+      toast.success('User removed (Demo)')
     }
+  }
+
+  const initials = (user: UserType) => {
+    if (!user.name) return 'U'
+    return user.name
+      .split(' ')
+      .filter(Boolean)
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-40 w-full" />)}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -206,17 +176,28 @@ export default function UsersPage() {
       >
         <div>
           <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage users, roles, and permissions (SuperAdmin only)
+          <p className="text-muted-foreground mt-1 text-sm">
+            Manage administrative, field agent, and citizen accounts.
           </p>
         </div>
-        <Button
-          className="gradient-primary text-white"
-          onClick={() => setIsCreateOpen(true)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add User
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => fetchData(true)}
+            className="h-9 gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            className="gradient-primary text-white h-9"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
+        </div>
       </motion.div>
 
       {/* Stats Cards */}
@@ -240,7 +221,7 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  <p className="text-xs text-muted-foreground uppercase">{stat.label}</p>
                 </div>
               </CardContent>
             </Card>
@@ -258,7 +239,7 @@ export default function UsersPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search users..."
+            placeholder="Search by name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 bg-secondary/50 border-transparent focus:border-primary"
@@ -266,14 +247,14 @@ export default function UsersPage() {
         </div>
         <Select value={roleFilter} onValueChange={setRoleFilter}>
           <SelectTrigger className="w-[150px] bg-secondary/50 border-transparent">
-            <SelectValue placeholder="Filter by role" />
+            <SelectValue placeholder="Filter Role" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
             <SelectItem value="SUPERADMIN">SuperAdmin</SelectItem>
             <SelectItem value="ADMIN">Admin</SelectItem>
             <SelectItem value="AGENT">Agent</SelectItem>
-            <SelectItem value="CITIZEN">Citizen</SelectItem>
+            <SelectItem value="USER">Citizen</SelectItem>
           </SelectContent>
         </Select>
       </motion.div>
@@ -287,7 +268,8 @@ export default function UsersPage() {
       >
         <AnimatePresence mode="popLayout">
           {filteredUsers.map((user, index) => {
-            const RoleIcon = roleIcons[user.role]
+            const RoleIcon = roleIcons[user.role] || User
+            const name = user.name || 'Unnamed User'
             return (
               <motion.div
                 key={user.id}
@@ -306,11 +288,9 @@ export default function UsersPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={user.avatar} />
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {user.firstName[0]}
-                              {user.lastName[0]}
+                          <Avatar className="h-12 w-12 border border-border/50">
+                            <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                              {initials(user)}
                             </AvatarFallback>
                           </Avatar>
                           <div
@@ -320,10 +300,10 @@ export default function UsersPage() {
                           />
                         </div>
                         <div>
-                          <p className="font-medium group-hover:text-primary transition-colors">
-                            {user.firstName} {user.lastName}
+                          <p className="font-semibold group-hover:text-primary transition-colors truncate max-w-[150px]">
+                            {name}
                           </p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[150px]">{user.email}</p>
                         </div>
                       </div>
                       <DropdownMenu>
@@ -338,7 +318,7 @@ export default function UsersPage() {
                             setSelectedUser(user)
                           }}>
                             <Edit2 className="h-4 w-4 mr-2" />
-                            Edit
+                            Edit Profile
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => {
                             e.stopPropagation()
@@ -357,18 +337,18 @@ export default function UsersPage() {
                             }}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
+                            Delete Account
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
                     <div className="flex items-center justify-between mt-4">
-                      <Badge variant="outline" className={roleColors[user.role]}>
+                      <Badge variant="outline" className={`${roleColors[user.role] || 'bg-muted'} text-[10px]`}>
                         <RoleIcon className="h-3 w-3 mr-1" />
                         {user.role}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        Joined {new Date(user.createdAt).toLocaleDateString()}
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(user.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </CardContent>
@@ -379,36 +359,34 @@ export default function UsersPage() {
         </AnimatePresence>
       </motion.div>
 
+      {/* Empty State */}
       {filteredUsers.length === 0 && (
-        <div className="text-center py-12">
-          <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <div className="text-center py-20 bg-muted/20 rounded-xl border border-dashed">
+          <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-20" />
           <h3 className="text-lg font-medium">No users found</h3>
           <p className="text-sm text-muted-foreground">
-            Try adjusting your search or filter criteria
+            Try adjusting your search or role filter.
           </p>
         </div>
       )}
 
-      {/* User Detail Dialog */}
+      {/* Detail Dialog */}
       <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-            <DialogDescription>View and edit user information</DialogDescription>
+            <DialogTitle>User Profile</DialogTitle>
+            <DialogDescription>Review and manage user account details</DialogDescription>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-6 mt-4">
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                    {selectedUser.firstName[0]}
-                    {selectedUser.lastName[0]}
+                <Avatar className="h-16 w-16 border-2 border-primary/20">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+                    {initials(selectedUser)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-lg">
-                    {selectedUser.firstName} {selectedUser.lastName}
-                  </h3>
+                  <h3 className="font-bold text-lg">{selectedUser.name}</h3>
                   <Badge variant="outline" className={roleColors[selectedUser.role]}>
                     {selectedUser.role}
                   </Badge>
@@ -418,7 +396,7 @@ export default function UsersPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedUser.email}</span>
+                  <span className="font-medium">{selectedUser.email}</span>
                 </div>
                 {selectedUser.phone && (
                   <div className="flex items-center gap-3 text-sm">
@@ -432,105 +410,24 @@ export default function UsersPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 border border-border/50">
                 <div>
-                  <p className="font-medium text-sm">Account Status</p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedUser.isActive ? 'Active and operational' : 'Currently deactivated'}
-                  </p>
+                  <p className="font-semibold text-sm">Account Active</p>
+                  <p className="text-xs text-muted-foreground">Toggle to suspend or restore access</p>
                 </div>
                 <Switch
                   checked={selectedUser.isActive}
-                  onCheckedChange={() => {
-                    toggleUserStatus(selectedUser.id)
-                    setSelectedUser({ ...selectedUser, isActive: !selectedUser.isActive })
-                  }}
+                  onCheckedChange={() => toggleUserStatus(selectedUser.id)}
                 />
               </div>
 
-              <FieldGroup>
-                <Field>
-                  <FieldLabel>Change Role</FieldLabel>
-                  <Select defaultValue={selectedUser.role}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CITIZEN">Citizen</SelectItem>
-                      <SelectItem value="AGENT">Agent</SelectItem>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
-                      <SelectItem value="SUPERADMIN">SuperAdmin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </FieldGroup>
-
               <DialogFooter>
-                <Button variant="outline" onClick={() => setSelectedUser(null)}>
-                  Cancel
-                </Button>
-                <Button className="gradient-primary text-white">
-                  Save Changes
+                <Button variant="outline" onClick={() => setSelectedUser(null)} className="w-full sm:w-auto">
+                  Close
                 </Button>
               </DialogFooter>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Create User Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New User</DialogTitle>
-            <DialogDescription>Add a new user to the system</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <FieldGroup>
-              <div className="grid grid-cols-2 gap-4">
-                <Field>
-                  <FieldLabel>First Name</FieldLabel>
-                  <Input placeholder="John" />
-                </Field>
-                <Field>
-                  <FieldLabel>Last Name</FieldLabel>
-                  <Input placeholder="Doe" />
-                </Field>
-              </div>
-              <Field>
-                <FieldLabel>Email</FieldLabel>
-                <Input type="email" placeholder="john@example.com" />
-              </Field>
-              <Field>
-                <FieldLabel>Phone</FieldLabel>
-                <Input type="tel" placeholder="+1 555-0100" />
-              </Field>
-              <Field>
-                <FieldLabel>Role</FieldLabel>
-                <Select defaultValue="CITIZEN">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CITIZEN">Citizen</SelectItem>
-                    <SelectItem value="AGENT">Agent</SelectItem>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="SUPERADMIN">SuperAdmin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel>Password</FieldLabel>
-                <Input type="password" placeholder="Enter password" />
-              </Field>
-            </FieldGroup>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                Cancel
-              </Button>
-              <Button className="gradient-primary text-white">Create User</Button>
-            </DialogFooter>
-          </div>
         </DialogContent>
       </Dialog>
 
@@ -540,8 +437,7 @@ export default function UsersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete User</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {userToDelete?.firstName} {userToDelete?.lastName}?
-              This action cannot be undone.
+              Are you sure you want to delete {userToDelete?.name}? This action cannot be undone and will remove all associated record history.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

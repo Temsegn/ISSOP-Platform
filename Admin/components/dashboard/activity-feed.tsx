@@ -27,7 +27,7 @@ const activityColors: Record<string, string> = {
 }
 
 export function ActivityFeed({ notifications }: ActivityFeedProps) {
-  const displayNotifications = notifications || []
+  const displayNotifications = Array.isArray(notifications) ? notifications : []
   
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">

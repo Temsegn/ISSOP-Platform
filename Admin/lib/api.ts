@@ -95,18 +95,21 @@ class ApiService {
         if (value !== undefined) queryParams.append(key, String(value))
       })
     }
-    return this.request(`/users?${queryParams.toString()}`)
+    const res = await this.request<ApiResponse<{ users: User[] }>>(`/users?${queryParams.toString()}`)
+    return { ...res, data: res.data?.users || [] }
   }
 
   async getUser(id: string): Promise<ApiResponse<User>> {
-    return this.request(`/users/${id}`)
+    const res = await this.request<ApiResponse<{ user: User }>>(`/users/${id}`)
+    return { ...res, data: res.data?.user }
   }
 
   async updateUser(id: string, data: Partial<User>): Promise<ApiResponse<User>> {
-    return this.request(`/users/${id}`, {
+    const res = await this.request<ApiResponse<{ user: User }>>(`/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     })
+    return { ...res, data: res.data?.user }
   }
 
   async deleteUser(id: string): Promise<ApiResponse<void>> {
@@ -114,10 +117,11 @@ class ApiService {
   }
 
   async updateUserRole(id: string, role: User['role']): Promise<ApiResponse<User>> {
-    return this.request(`/users/${id}/role`, {
+    const res = await this.request<ApiResponse<{ user: User }>>(`/users/${id}/role`, {
       method: 'PATCH',
       body: JSON.stringify({ role }),
     })
+    return { ...res, data: res.data?.user }
   }
 
   // Request endpoints
@@ -128,30 +132,35 @@ class ApiService {
         if (value !== undefined) queryParams.append(key, String(value))
       })
     }
-    return this.request(`/requests?${queryParams.toString()}`)
+    const res = await this.request<ApiResponse<{ requests: Request[] }>>(`/requests?${queryParams.toString()}`)
+    return { ...res, data: res.data?.requests || [] }
   }
 
   async getRequest(id: string): Promise<ApiResponse<Request>> {
-    return this.request(`/requests/${id}`)
+    const res = await this.request<ApiResponse<{ request: Request }>>(`/requests/${id}`)
+    return { ...res, data: res.data?.request }
   }
 
   async assignRequest(requestId: string, agentId: string): Promise<ApiResponse<Request>> {
-    return this.request(`/requests/${requestId}/assign`, {
+    const res = await this.request<ApiResponse<{ request: Request }>>(`/requests/${requestId}/assign`, {
       method: 'PATCH',
       body: JSON.stringify({ agentId }),
     })
+    return { ...res, data: res.data?.request }
   }
 
   async updateRequestStatus(id: string, status: Request['status']): Promise<ApiResponse<Request>> {
-    return this.request(`/requests/${id}/status`, {
+    const res = await this.request<ApiResponse<{ request: Request }>>(`/requests/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     })
+    return { ...res, data: res.data?.request }
   }
 
   // Location/Agents endpoints
   async getNearestAgents(lat: number, lon: number, radius?: number): Promise<ApiResponse<User[]>> {
-    return this.request(`/users/nearest-agents?lat=${lat}&lon=${lon}${radius ? `&radius=${radius}` : ''}`)
+    const res = await this.request<ApiResponse<{ agents: User[] }>>(`/users/nearest-agents?lat=${lat}&lon=${lon}${radius ? `&radius=${radius}` : ''}`)
+    return { ...res, data: res.data?.agents || [] }
   }
 
   // Analytics endpoints
@@ -160,12 +169,14 @@ class ApiService {
   }
 
   async getAgentPerformance(): Promise<ApiResponse<{ agentId: string; name: string; completed: number; avgTime: string }[]>> {
-    return this.request('/analytics/agents')
+    const res = await this.request<ApiResponse<{ agents: any[] }>>('/analytics/agents')
+    return { ...res, data: res.data?.agents || [] }
   }
 
   // Notification endpoints
   async getNotifications(): Promise<ApiResponse<Notification[]>> {
-    return this.request('/notifications')
+    const res = await this.request<ApiResponse<{ notifications: Notification[] }>>('/notifications')
+    return { ...res, data: res.data?.notifications || [] }
   }
 
   async markNotificationRead(id: string): Promise<ApiResponse<Notification>> {

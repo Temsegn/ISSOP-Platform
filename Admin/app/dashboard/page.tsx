@@ -6,11 +6,16 @@ import { FileText, Clock, CheckCircle, Users, Map as MapIcon, Activity } from 'l
 import { KPICard } from '@/components/dashboard/kpi-card'
 import { ActivityFeed } from '@/components/dashboard/activity-feed'
 import { RequestsLineChart, CategoryPieChart } from '@/components/dashboard/overview-charts'
-import { LiveMap } from '@/components/dashboard/live-map'
 import { api } from '@/lib/api'
 import type { DashboardStats, Request as IssueRequest, User, Notification as AppNotification } from '@/lib/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import dynamic from 'next/dynamic'
+
+const LiveMap = dynamic(
+  () => import('@/components/dashboard/live-map').then((mod) => mod.LiveMap),
+  { ssr: false }
+)
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)

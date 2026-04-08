@@ -112,14 +112,21 @@ export function DashboardNavbar() {
     }
   }
 
-  // Demo user data
+  // Display user data with multiple fallbacks
   const displayUser = user || {
     name: 'Admin User',
     email: 'admin@issop.city',
     role: 'SUPERADMIN',
   }
 
-  const initials = displayUser.name.split(' ').map(n => n[0]).join('')
+  const userName = displayUser?.name || 'Admin User'
+  const initials = userName
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'AU'
 
   return (
     <motion.header

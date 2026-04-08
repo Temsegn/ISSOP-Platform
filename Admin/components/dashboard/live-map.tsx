@@ -8,105 +8,82 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 // Fix for default marker icons in Next.js
-const createIcon = (color: string) => {
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `
-      <div style="
-        width: 32px;
-        height: 32px;
-        background: ${color};
-        border: 3px solid white;
-        border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      ">
-        <div style="
-          width: 10px;
-          height: 10px;
-          background: white;
-          border-radius: 50%;
-        "></div>
-      </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16],
-  })
+const statusColors: Record<string, string> = {
+  AVAILABLE: '#22c55e',
+  BUSY: '#f59e0b',
+  OFFLINE: '#6b7280',
 }
 
 const createAgentIcon = (availability: string) => {
-  const statusColors = {
-    AVAILABLE: '#22c55e',
-    BUSY: '#f59e0b',
-    OFFLINE: '#6b7280',
-  }
-  const statusColor = statusColors[availability as keyof typeof statusColors] || '#6b7280'
+  const statusColor = statusColors[availability as keyof typeof statusColors] || statusColors.OFFLINE
   
   return L.divIcon({
     className: 'agent-marker',
     html: `
       <div style="
         position: relative;
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
       ">
-        <div style="
-          width: 36px;
-          height: 36px;
-          background: #22c55e;
-          border: 3px solid white;
-          border-radius: 50%;
-          box-shadow: 0 0 15px rgba(34, 197, 94, 0.5), 0 4px 10px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: 800;
-          font-size: 18px;
-          font-family: 'Inter', system-ui, sans-serif;
-          z-index: 2;
-        ">A</div>
-        <div style="
-          position: absolute;
-          bottom: 2px;
-          right: 2px;
-          width: 12px;
-          height: 12px;
-          background: ${statusColor};
-          border: 2px solid white;
-          border-radius: 50%;
-          z-index: 3;
-        "></div>
+        <!-- Outer Glow/Pulse -->
         ${availability === 'AVAILABLE' ? `
           <div style="
             position: absolute;
             width: 40px;
             height: 40px;
-            background: rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.4);
             border-radius: 50%;
             animation: pulse-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-            z-index: 1;
+            z-index: 0;
           "></div>
         ` : ''}
+        
+        <!-- Main 'A' Circle -->
+        <div style="
+          width: 36px;
+          height: 36px;
+          background: #10b981; /* Vibrant Emerald Green */
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 10px rgba(16, 185, 129, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: 900;
+          font-size: 19px;
+          font-family: 'Inter', system-ui, sans-serif;
+          z-index: 2;
+          transform: translateY(-2px);
+        ">A</div>
+        
+        <!-- Status Indicator Dot -->
+        <div style="
+          position: absolute;
+          bottom: 4px;
+          right: 4px;
+          width: 14px;
+          height: 14px;
+          background: ${statusColor};
+          border: 2px solid white;
+          border-radius: 50%;
+          z-index: 3;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        "></div>
       </div>
       <style>
         @keyframes pulse-ping {
-          75%, 100% {
-            transform: scale(1.5);
-            opacity: 0;
-          }
+          0% { transform: scale(1); opacity: 0.6; }
+          75%, 100% { transform: scale(1.8); opacity: 0; }
         }
       </style>
     `,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+    popupAnchor: [0, -22],
   })
 }
 
@@ -175,19 +152,60 @@ interface LiveMapProps {
   showRequests?: boolean
   selectedAgentId?: string | null
   selectedRequestId?: string | null
+  radarCenter?: [number, number] | null
+  nearbyAgents?: Agent[]
   className?: string
 }
 
-function FlyToMarker({ position }: { position: [number, number] | null }) {
+function FlyToMarker({ position, zoom = 15 }: { position: [number, number] | null; zoom?: number }) {
   const map = useMap()
   
   useEffect(() => {
     if (position) {
-      map.flyTo(position, 15, { duration: 1 })
+      map.flyTo(position, zoom, { duration: 1.5 })
     }
-  }, [map, position])
+  }, [map, position, zoom])
   
   return null
+}
+
+function ScanningRadar({ center }: { center: [number, number] }) {
+  return (
+    <>
+      <Circle
+        center={center}
+        radius={1000}
+        pathOptions={{
+          color: '#10b981',
+          fillColor: '#10b981',
+          fillOpacity: 0.1,
+          weight: 1,
+          dashArray: '5, 10'
+        }}
+        className="radar-circle"
+      />
+      <Circle
+        center={center}
+        radius={500}
+        pathOptions={{
+          color: '#10b981',
+          fillColor: '#10b981',
+          fillOpacity: 0.2,
+          weight: 2,
+        }}
+        className="radar-pulse"
+      />
+      <style>{`
+        .radar-pulse {
+          animation: radar-pulse-anim 3s ease-out infinite;
+        }
+        @keyframes radar-pulse-anim {
+          0% { transform: scale(0.1); opacity: 0.8; }
+          100% { transform: scale(3); opacity: 0; }
+        }
+      `}</style>
+    </>
+  )
 }
 
 export function LiveMap({
@@ -201,6 +219,8 @@ export function LiveMap({
   showRequests = true,
   selectedAgentId,
   selectedRequestId,
+  radarCenter,
+  nearbyAgents = [],
   className = '',
 }: LiveMapProps) {
   const [mounted, setMounted] = useState(false)
@@ -211,7 +231,9 @@ export function LiveMap({
   }, [])
 
   useEffect(() => {
-    if (selectedAgentId) {
+    if (radarCenter) {
+      setFlyToPosition(radarCenter)
+    } else if (selectedAgentId) {
       const agent = agents.find(a => a.id === selectedAgentId)
       if (agent?.location) {
         setFlyToPosition([agent.location.lat, agent.location.lng])
@@ -222,7 +244,7 @@ export function LiveMap({
         setFlyToPosition([request.latitude, request.longitude])
       }
     }
-  }, [selectedAgentId, selectedRequestId, agents, requests])
+  }, [selectedAgentId, selectedRequestId, radarCenter, agents, requests])
 
   if (!mounted) {
     return (
@@ -260,18 +282,35 @@ export function LiveMap({
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       
-      <FlyToMarker position={flyToPosition} />
+      <FlyToMarker position={flyToPosition} zoom={radarCenter ? 14 : 15} />
+
+      {radarCenter && <ScanningRadar center={radarCenter} />}
+
+      {/* Nearby Agent Highlights */}
+      {radarCenter && nearbyAgents.map(agent => agent.location && (
+        <Circle
+          key={`nearby-highlight-${agent.id}`}
+          center={[agent.location.lat, agent.location.lng]}
+          radius={100}
+          pathOptions={{
+            color: '#10b981',
+            fillColor: '#10b981',
+            fillOpacity: 0.4,
+            weight: 2
+          }}
+        />
+      ))}
 
       {/* Agent Markers */}
-      {showAgents && agents.filter(a => a.location).map((agent) => {
+      {(showAgents || nearbyAgents.length > 0) && agents.concat(nearbyAgents).filter((v, i, a) => a.findIndex(t => t.id === v.id) === i).filter(a => a.location).map((agent) => {
         const initials = agent.name.split(' ').map(n => n[0]).join('')
-        const isSelected = selectedAgentId === agent.id
+        const isSelected = selectedAgentId === agent.id || nearbyAgents.some(na => na.id === agent.id)
         
         return (
           <Marker
             key={`agent-${agent.id}`}
             position={[agent.location!.lat, agent.location!.lng]}
-            icon={createAgentIcon(agent.availability, initials)}
+            icon={createAgentIcon(agent.availability)}
             eventHandlers={{
               click: () => onAgentClick?.(agent),
             }}
@@ -280,7 +319,7 @@ export function LiveMap({
               <div className="p-1 min-w-[180px]">
                 <div className="flex items-center gap-2 mb-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                    <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold uppercase">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -300,7 +339,7 @@ export function LiveMap({
                     <p>Tasks: {agent.assignedTasks} assigned</p>
                   )}
                   {agent.rating !== undefined && (
-                    <p>Rating: {agent.rating}/5.0</p>
+                    <p>Rating: {agent.rating.toFixed(1)}/5.0</p>
                   )}
                 </div>
               </div>
@@ -310,8 +349,8 @@ export function LiveMap({
                 center={[agent.location!.lat, agent.location!.lng]}
                 radius={200}
                 pathOptions={{
-                  color: 'hsl(250, 80%, 55%)',
-                  fillColor: 'hsl(250, 80%, 55%)',
+                  color: '#10b981',
+                  fillColor: '#10b981',
                   fillOpacity: 0.1,
                   weight: 2,
                 }}
@@ -323,7 +362,7 @@ export function LiveMap({
 
       {/* Request Markers */}
       {showRequests && requests.map((request) => {
-        const isSelected = selectedRequestId === request.id
+        const isSelected = selectedRequestId === request.id || (radarCenter && radarCenter[0] === request.latitude && radarCenter[1] === request.longitude)
         
         return (
           <Marker

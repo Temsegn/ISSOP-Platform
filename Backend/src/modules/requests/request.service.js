@@ -78,11 +78,7 @@ class RequestService {
       throw error;
     }
 
-    if (currentUser.role === 'ADMIN' && currentUser.area !== agent.area) {
-       const error = new Error('Admins can only assign to agents in their own area');
-       error.statusCode = 403;
-       throw error;
-    }
+    // Admins can now assign agents regardless of area as per requirements Update
 
     // Update agent status to BUSY
     await userRepository.update(agentId, { status: 'BUSY' });
