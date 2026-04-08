@@ -16,6 +16,13 @@ jest.mock('../../src/middleware/auth.middleware', () => {
   });
 });
 
+// Mock socket service globally for integration tests
+jest.mock('../../src/config/socket', () => ({
+  emitToUser: jest.fn(),
+  emitToRoom: jest.fn(),
+  emitAll: jest.fn(),
+}));
+
 // Note: Notification service uses real logic but prisma is mocked
 
 require('dotenv').config();
@@ -28,6 +35,18 @@ const asUser  = (req) => req.set('Authorization', 'Bearer tok').set('x-test-role
 const asAdmin = (req) => req.set('Authorization', 'Bearer tok').set('x-test-role', 'ADMIN').set('x-test-id', 'admin1').set('x-test-area', 'Central');
 const asAgent = (req) => req.set('Authorization', 'Bearer tok').set('x-test-role', 'AGENT').set('x-test-id', 'agt1').set('x-test-area', 'Central');
 const asSA    = (req) => req.set('Authorization', 'Bearer tok').set('x-test-role', 'SUPERADMIN').set('x-test-id', 'super1');
+
+beforeEach(() => {
+  // Reset all mocks
+  prismaMock.user.findUnique.mockResolvedValue(null);
+  prismaMock.user.findMany.mockResolvedValue([]);
+  prismaMock.request.findUnique.mockResolvedValue(null);
+  prismaMock.request.findMany.mockResolvedValue([]);
+  prismaMock.request.create.mockResolvedValue(null);
+  prismaMock.request.update.mockResolvedValue(null);
+  prismaMock.notification.create.mockResolvedValue({ id: 'mock-notif' });
+  prismaMock.notification.findMany.mockResolvedValue([]);
+});
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 const baseRequest = {
@@ -147,6 +166,7 @@ describe('Agent Tasks API', () => {
   });
 
   it('PATCH /agent/tasks/:id/accept → 200 accepts task → IN_PROGRESS', async () => {
+    prismaMock.request.findUnique.mockResolvedValue({ ...baseRequest, status: 'ASSIGNED', agentId: 'agt1' });
     prismaMock.request.update.mockResolvedValue({ ...baseRequest, status: 'IN_PROGRESS', agentId: 'agt1' });
 
     const res = await asAgent(supertest(app).patch('/api/v1/agent/tasks/req1/accept'));
@@ -156,6 +176,7 @@ describe('Agent Tasks API', () => {
   });
 
   it('PATCH /agent/tasks/:id/reject → 200 rejects task → PENDING', async () => {
+    prismaMock.request.findUnique.mockResolvedValue({ ...baseRequest, status: 'ASSIGNED', agentId: 'agt1' });
     prismaMock.request.update.mockResolvedValue({ ...baseRequest, status: 'PENDING', agentId: null });
 
     const res = await asAgent(supertest(app).patch('/api/v1/agent/tasks/req1/reject'));
@@ -166,6 +187,7 @@ describe('Agent Tasks API', () => {
 
   it('PATCH /agent/tasks/:id/complete → 200 completes task with proof', async () => {
     const proofUrl = 'http://example.com/proof.jpg';
+    prismaMock.request.findUnique.mockResolvedValue({ ...baseRequest, status: 'IN_PROGRESS', agentId: 'agt1' });
     prismaMock.request.update.mockResolvedValue({
       ...baseRequest, status: 'COMPLETED', agentId: 'agt1', completionProofUrl: proofUrl,
     });
@@ -179,6 +201,7 @@ describe('Agent Tasks API', () => {
   });
 
   it('PATCH /agent/tasks/:id/complete → 400 when proof URL missing', async () => {
+    prismaMock.request.findUnique.mockResolvedValue({ ...baseRequest, status: 'IN_PROGRESS', agentId: 'agt1' });
     const res = await asAgent(supertest(app).patch('/api/v1/agent/tasks/req1/complete'))
       .send({});
 
@@ -221,6 +244,11 @@ describe('Analytics API', () => {
       .mockResolvedValueOnce([
         { category: 'Road', _count: { id: 10 } },
       ]);
+    prismaMock.request.findMany.mockResolvedValue([
+      { createdAt: new Date(), status: 'PENDING' },
+      { createdAt: new Date(), status: 'COMPLETED' },
+    ]);
+    prismaMock.user.count.mockResolvedValue(5);
 
     const res = await asSA(supertest(app).get('/api/v1/analytics/summary'));
 

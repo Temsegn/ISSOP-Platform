@@ -16,6 +16,10 @@ describe('AnalyticsService', () => {
         { category: 'Road', _count: { id: 5 } },
         { category: 'Water', _count: { id: 5 } },
       ]);
+      prismaMock.request.findMany.mockResolvedValue([
+        { createdAt: new Date(), status: 'PENDING' },
+        { createdAt: new Date(), status: 'COMPLETED' },
+      ]);
 
       const result = await analyticsService.getSummary(mockSuperAdmin);
 
@@ -31,6 +35,7 @@ describe('AnalyticsService', () => {
         { status: 'PENDING', _count: { id: 3 } },
       ]);
       prismaMock.request.groupBy.mockResolvedValueOnce([]);
+      prismaMock.request.findMany.mockResolvedValue([]);
 
       const result = await analyticsService.getSummary(mockAdmin);
 
@@ -38,7 +43,11 @@ describe('AnalyticsService', () => {
       // Verify that count was called with an area-based where clause
       expect(prismaMock.request.count).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ citizen: { area: 'Central' } }),
+          where: expect.objectContaining({ 
+            citizen: expect.objectContaining({ 
+               area: expect.objectContaining({ equals: 'Central' }) 
+            }) 
+          }),
         })
       );
     });

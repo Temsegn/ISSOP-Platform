@@ -3,11 +3,18 @@ const prisma = require('../../config/db');
 class AnalyticsRepository {
   async getSummary(areaFilter = null) {
     const where = {};
+    console.log(`[Analytics] Fetching summary for areaFilter: ${areaFilter}`);
     if (areaFilter) {
-      where.citizen = { area: areaFilter };
+      where.citizen = { 
+        area: {
+          equals: areaFilter.trim(),
+          mode: 'insensitive'
+        }
+      };
     }
 
     const totalRequests = await prisma.request.count({ where });
+    console.log(`[Analytics] Total Requests found: ${totalRequests}`);
 
     const statusCounts = await prisma.request.groupBy({
       by: ['status'],
@@ -89,7 +96,7 @@ class AnalyticsRepository {
       category: c.category
     }));
 
-    return {
+    const finalSummary = {
       totalRequests,
       pendingRequests: formattedStatusCounts.PENDING,
       completedRequests: formattedStatusCounts.COMPLETED,
@@ -98,6 +105,14 @@ class AnalyticsRepository {
       categoryCounts: formattedCategoryCounts,
       trend
     };
+
+    console.log('[Analytics] Summary calculated:', JSON.stringify({ 
+      total: finalSummary.totalRequests, 
+      pending: finalSummary.pendingRequests, 
+      completed: finalSummary.completedRequests 
+    }));
+
+    return finalSummary;
   }
 
   async getAgentPerformance(areaFilter = null) {

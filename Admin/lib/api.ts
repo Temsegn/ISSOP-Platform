@@ -11,7 +11,7 @@ import type {
   PaginationParams,
 } from './types'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://issop-platform.onrender.com/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 class ApiService {
   private token: string | null = null

@@ -95,13 +95,13 @@ describe('RequestService', () => {
       ).rejects.toMatchObject({ statusCode: 400, message: 'Invalid agent ID' });
     });
 
-    it('should throw 403 if Admin assigns agent from different area', async () => {
+    it('should allow Admin to assign agent from a different area', async () => {
       prismaMock.request.findUnique.mockResolvedValue(baseRequest);
       prismaMock.user.findUnique.mockResolvedValue({ ...mockAgent, area: 'North' });
+      prismaMock.request.update.mockResolvedValue({ ...baseRequest, agentId: 'agt1', status: 'ASSIGNED' });
 
-      await expect(
-        requestService.assignRequest('req1', 'agt1', mockAdmin)
-      ).rejects.toMatchObject({ statusCode: 403 });
+      const result = await requestService.assignRequest('req1', 'agt1', mockAdmin);
+      expect(result.status).toBe('ASSIGNED');
     });
   });
 

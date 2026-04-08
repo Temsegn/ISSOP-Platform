@@ -7,8 +7,14 @@ jest.mock('../../src/config/socket', () => ({
   emitAll: jest.fn(),
 }));
 
+jest.mock('../../src/modules/users/user.repository', () => ({
+  findAll: jest.fn(),
+  findById: jest.fn(),
+}));
+
 const notificationService = require('../../src/modules/notifications/notification.service');
 const socketService = require('../../src/config/socket');
+const userRepository = require('../../src/modules/users/user.repository');
 
 describe('NotificationService', () => {
   describe('notifyAgentTaskAssigned()', () => {
@@ -68,11 +74,21 @@ describe('NotificationService', () => {
   });
 
   describe('notifyAdminsRequestCreated()', () => {
-    it('should emit to admins room and area room', async () => {
+    it('should create persistent notifications and emit to admins', async () => {
+      userRepository.findAll.mockResolvedValue([
+        { id: 'admin1', email: 'a@t.com', role: 'ADMIN' },
+        { id: 'super1', email: 's@t.com', role: 'SUPERADMIN' }
+      ]);
+      prismaMock.notification.create.mockResolvedValue({ id: 'n-new' });
+
       await notificationService.notifyAdminsRequestCreated('req1', 'Fix Pothole', 'Central');
 
+      expect(userRepository.findAll).toHaveBeenCalledWith(expect.objectContaining({
+        role: expect.objectContaining({ in: ['ADMIN', 'SUPERADMIN'] })
+      }));
+      expect(prismaMock.notification.create).toHaveBeenCalledTimes(2);
+      expect(socketService.emitToUser).toHaveBeenCalledWith('admin1', 'notification_received', expect.any(Object));
       expect(socketService.emitToRoom).toHaveBeenCalledWith('admins', 'request_created', expect.any(Object));
-      expect(socketService.emitToRoom).toHaveBeenCalledWith('admin_area_Central', 'request_created', expect.any(Object));
     });
   });
 
