@@ -38,12 +38,21 @@ export default function DashboardPage() {
           api.getNotifications()
         ])
 
-        console.log('[Dashboard] Raw Summary Stats:', statsRes)
+        console.log('[Dashboard] Raw Summary Stats Response:', JSON.stringify(statsRes, null, 2))
+        console.log('[Dashboard] Stats Data:', JSON.stringify(statsRes.data, null, 2))
         console.log('[Dashboard] Raw Requests:', requestsRes.data?.length || 0)
 
         // Handle stats data properly
         if (statsRes.data) {
+          console.log('[Dashboard] Setting stats:', {
+            totalRequests: statsRes.data.totalRequests,
+            pendingRequests: statsRes.data.pendingRequests,
+            completedRequests: statsRes.data.completedRequests,
+            activeAgents: statsRes.data.activeAgents
+          })
           setStats(statsRes.data)
+        } else {
+          console.warn('[Dashboard] No stats data in response')
         }
         
         setRequests(requestsRes.data || [])
@@ -94,7 +103,7 @@ export default function DashboardPage() {
     {
       title: 'Total Requests',
       value: stats.totalRequests || 0,
-      change: 0, // Backend could provide this later
+      change: 0,
       icon: FileText,
       iconColor: 'text-primary',
     },
@@ -120,6 +129,19 @@ export default function DashboardPage() {
       iconColor: 'text-accent',
     },
   ] : []
+
+  // Debug logging
+  useEffect(() => {
+    if (stats) {
+      console.log('[Dashboard] Current stats state:', {
+        totalRequests: stats.totalRequests,
+        pendingRequests: stats.pendingRequests,
+        completedRequests: stats.completedRequests,
+        activeAgents: stats.activeAgents,
+        fullStats: stats
+      })
+    }
+  }, [stats])
 
   if (loading) {
     return (
