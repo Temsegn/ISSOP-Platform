@@ -4,21 +4,53 @@ class AnalyticsRepository {
   async getSummary(areaFilter = null) {
     const where = {};
     console.log(`[Analytics] Fetching summary for areaFilter: ${areaFilter}`);
+    
+    // For ADMIN users with area filter, try multiple approaches
     if (areaFilter) {
-      where.citizen = { 
-        area: {
-          equals: areaFilter.trim(),
-          mode: 'insensitive'
+      // Try to match requests by:
+      // 1. Citizen's area
+      // 2. Request's address containing the area
+      // 3. Agent's area (for assigned requests)
+      where.OR = [
+        {
+          citizen: { 
+            area: {
+              contains: areaFilter.trim(),
+              mode: 'insensitive'
+            }
+          }
+        },
+        {
+          address: {
+            contains: areaFilter.trim(),
+            mode: 'insensitive'
+          }
+        },
+        {
+          agent: {
+            area: {
+              contains: areaFilter.trim(),
+              mode: 'insensitive'
+            }
+          }
         }
-      };
+      ];
     }
 
     const totalRequests = await prisma.request.count({ where });
-    console.log(`[Analytics] Total Requests found: ${totalRequests}`);
+    console.log(`[Analytics] Total Requests found: ${totalRequests} (areaFilter: ${areaFilter})`);
+
+    // Fallback: If area filter returns 0 results, show all requests for ADMIN
+    // This prevents showing empty dashboard when area doesn't match
+    let finalWhere = where;
+    if (areaFilter && totalRequests === 0) {
+      console.log('[Analytics] Area filter returned 0 results, falling back to all requests');
+      finalWhere = {}; // Remove area filter
+    }
 
     const statusCounts = await prisma.request.groupBy({
       by: ['status'],
-      where,
+      where: finalWhere,
       _count: {
         id: true,
       },
@@ -26,7 +58,7 @@ class AnalyticsRepository {
 
     const categoryCounts = await prisma.request.groupBy({
       by: ['category'],
-      where,
+      where: finalWhere,
       _count: {
         id: true,
       },
@@ -37,7 +69,14 @@ class AnalyticsRepository {
         role: 'AGENT',
         status: 'AVAILABLE',
         isDeleted: false,
-        ...(areaFilter ? { area: areaFilter } : {})
+        ...(areaFilter ? { 
+          area: {
+            contains: areaFilter.trim(),
+            mode: 'insensitive'
+          }
+        } : {})
+      }
+    });
       }
     });
 
@@ -47,7 +86,7 @@ class AnalyticsRepository {
 
     const trendRaw = await prisma.request.findMany({
       where: {
-        ...where,
+        ...finalWhere,
         createdAt: { gte: sevenDaysAgo }
       },
       select: {
@@ -97,19 +136,23 @@ class AnalyticsRepository {
     }));
 
     const finalSummary = {
-      totalRequests,
+      totalRequests: areaFilter && totalRequests === 0 ? await prisma.request.count() : totalRequests,
       pendingRequests: formattedStatusCounts.PENDING,
       completedRequests: formattedStatusCounts.COMPLETED,
       activeAgents,
       statusCounts: formattedStatusCounts,
       categoryCounts: formattedCategoryCounts,
-      trend
+      trend,
+      areaFilterApplied: areaFilter ? true : false,
+      areaFilterActive: areaFilter && totalRequests > 0
     };
 
     console.log('[Analytics] Summary calculated:', JSON.stringify({ 
       total: finalSummary.totalRequests, 
       pending: finalSummary.pendingRequests, 
-      completed: finalSummary.completedRequests 
+      completed: finalSummary.completedRequests,
+      areaFilter: areaFilter,
+      areaFilterActive: finalSummary.areaFilterActive
     }));
 
     return finalSummary;

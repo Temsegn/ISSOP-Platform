@@ -287,71 +287,112 @@ export default function UsersPage() {
         </Select>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <AnimatePresence mode="popLayout">
-          {filteredUsers.map((user, index) => {
-            const RoleIcon = roleIcons[user.role] || User
-            return (
-              <motion.div
-                key={user.id}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                layout
-              >
-                <Card className={`group relative overflow-hidden border-border/40 bg-card/40 hover:bg-card/60 transition-all ${!user.isActive ? 'grayscale opacity-60' : ''}`}>
-                  <div className={`absolute top-0 left-0 w-1 h-full ${user.role === 'SUPERADMIN' ? 'bg-destructive' : 'bg-primary'}`} />
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12 border-2 border-border/10 ring-2 ring-transparent group-hover:ring-primary/20 transition-all shadow-xl">
-                          <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials(user.name)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-bold text-sm truncate max-w-[140px] tracking-tight">{user.name || 'Anonymous'}</p>
-                          <p className="text-[10px] text-muted-foreground truncate max-w-[140px]">{user.email}</p>
-                        </div>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                          <DropdownMenuItem onClick={() => setSelectedUser(user)}>
-                            <Edit2 className="h-4 w-4 mr-2" /> View Intel
-                          </DropdownMenuItem>
-                          {currentUser?.role === 'SUPERADMIN' && (
-                            <>
-                              <DropdownMenuItem onClick={() => toggleUserStatus(user.id)}>
-                                <Power className="h-4 w-4 mr-2" /> {user.isActive ? 'Deactivate' : 'Activate'}
+      {/* Users Table */}
+      <Card className="border-border/40 bg-card/40 backdrop-blur-md">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b border-border/20 bg-secondary/20">
+                <tr>
+                  <th className="text-left py-3 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">User</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Contact</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Role</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Joined</th>
+                  <th className="text-right py-3 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/10">
+                <AnimatePresence mode="popLayout">
+                  {filteredUsers.map((user) => {
+                    const RoleIcon = roleIcons[user.role] || User
+                    return (
+                      <motion.tr
+                        key={user.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className={`group hover:bg-secondary/30 transition-colors ${!user.isActive ? 'opacity-50' : ''}`}
+                      >
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-9 w-9 border border-border/10">
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                                {initials(user.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold text-sm">{user.name || 'Anonymous'}</p>
+                              {user.area && <p className="text-xs text-muted-foreground">{user.area}</p>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium">{user.email}</p>
+                            {user.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant="outline" className={`${roleColors[user.role]} text-xs font-semibold`}>
+                            <RoleIcon className="h-3 w-3 mr-1" /> {user.role}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <div className={`h-2 w-2 rounded-full ${user.isActive ? 'bg-success' : 'bg-muted-foreground'}`} />
+                            <span className="text-xs font-medium">{user.isActive ? 'Active' : 'Inactive'}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(user.createdAt).toLocaleDateString()}
+                          </p>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                              <DropdownMenuItem onClick={() => setSelectedUser(user)}>
+                                <Edit2 className="h-4 w-4 mr-2" /> View Details
                               </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-destructive" 
-                                onClick={() => { setUserToDelete(user); setIsDeleteOpen(true); }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" /> Erase Account
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <div className="flex items-center justify-between mt-6">
-                      <Badge variant="secondary" className={`${roleColors[user.role]} text-[9px] uppercase font-bold tracking-widest px-2 py-0.5`}>
-                         <RoleIcon className="h-2.5 w-2.5 mr-1.5" /> {user.role}
-                      </Badge>
-                      <span className="text-[9px] text-muted-foreground italic">Member since {new Date(user.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )
-          })}
-        </AnimatePresence>
-      </div>
+                              {currentUser?.role === 'SUPERADMIN' && (
+                                <>
+                                  <DropdownMenuItem onClick={() => toggleUserStatus(user.id)}>
+                                    <Power className="h-4 w-4 mr-2" /> {user.isActive ? 'Deactivate' : 'Activate'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    className="text-destructive" 
+                                    onClick={() => { setUserToDelete(user); setIsDeleteOpen(true); }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" /> Delete User
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </motion.tr>
+                    )
+                  })}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+          {filteredUsers.length === 0 && (
+            <div className="py-12 text-center">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-sm font-medium text-muted-foreground">No users found</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Try adjusting your search or filters</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Detail Intel Dialog */}
       <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
