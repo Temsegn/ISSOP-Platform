@@ -11,10 +11,12 @@ import type {
   PaginationParams,
 } from './types'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://issop-platform.onrender.com/api/v1'
 
 class ApiService {
   private token: string | null = null
+  private cache: Map<string, { data: any; timestamp: number }> = new Map()
+  private readonly CACHE_TTL = 30000 // 30 seconds
 
   setToken(token: string | null) {
     this.token = token
@@ -32,7 +34,6 @@ class ApiService {
   getToken(): string | null {
     if (this.token) return this.token
     if (typeof window !== 'undefined') {
-      // Try to get from cookie first for consistency with middleware
       const match = document.cookie.match(/(^| )auth_token=([^;]+)/)
       if (match) return match[2]
       return localStorage.getItem('auth_token')
@@ -44,6 +45,17 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    const isGet = !options.method || options.method === 'GET'
+
+    // Check cache for GET requests
+    if (isGet && this.cache.has(endpoint)) {
+      const cached = this.cache.get(endpoint)!
+      if (Date.now() - cached.timestamp < this.CACHE_TTL) {
+        return cached.data as T
+      }
+      this.cache.delete(endpoint)
+    }
+
     const token = this.getToken()
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -61,7 +73,19 @@ class ApiService {
       throw new Error(error.message || `HTTP error! status: ${response.status}`)
     }
 
-    return response.json()
+    const data = await response.json()
+
+    // Store in cache if it's a GET request
+    if (isGet) {
+      this.cache.set(endpoint, { data, timestamp: Date.now() })
+    }
+
+    return data as T
+  }
+
+  // Clear cache method
+  clearCache() {
+    this.cache.clear()
   }
 
   // Auth endpoints

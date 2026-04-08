@@ -7,9 +7,11 @@ import { KPICard } from '@/components/dashboard/kpi-card'
 import { ActivityFeed } from '@/components/dashboard/activity-feed'
 import { RequestsLineChart, CategoryPieChart } from '@/components/dashboard/overview-charts'
 import { api } from '@/lib/api'
+import { socketService } from '@/lib/socket'
 import type { DashboardStats, Request as IssueRequest, User, Notification as AppNotification } from '@/lib/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { toast } from 'sonner'
 import dynamic from 'next/dynamic'
 
 const LiveMap = dynamic(
@@ -25,8 +27,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData(force = false) {
       try {
+        if (force) api.clearCache()
+        
         const [statsRes, requestsRes, usersRes, notifsRes] = await Promise.all([
           api.getSummaryStats(),
           api.getRequests({ limit: 50 }),
@@ -34,10 +38,12 @@ export default function DashboardPage() {
           api.getNotifications()
         ])
 
+        console.log('[Dashboard] Raw Summary Stats:', statsRes)
+        console.log('[Dashboard] Raw Requests:', requestsRes.data.length)
+
         setStats(statsRes.data)
         setRequests(requestsRes.data)
         setNotifications(notifsRes.data)
-        // Filter agents from users
         const agentsList = usersRes.data.filter(u => u.role === 'AGENT')
         setAgents(agentsList)
       } catch (error) {
@@ -48,6 +54,28 @@ export default function DashboardPage() {
     }
 
     fetchData()
+
+    // Real-time Listeners
+    socketService.on('notification_received', (notif) => {
+      console.log('[Socket] New Notification:', notif)
+      setNotifications(prev => [notif, ...prev])
+      toast.info(`System Alert: ${notif.message}`, {
+        icon: <Activity className="h-4 w-4 text-primary" />,
+        duration: 8000
+      })
+      fetchData(true) // Refresh stats
+    })
+
+    socketService.on('status_updated', (data) => {
+      console.log('[Socket] Status Updated:', data)
+      toast.success(`Task Update: ${data.requestTitle} is now ${data.newStatus}`)
+      fetchData(true) // Refresh everything
+    })
+
+    return () => {
+      socketService.off('notification_received')
+      socketService.off('status_updated')
+    }
   }, [])
 
   const kpis = stats ? [

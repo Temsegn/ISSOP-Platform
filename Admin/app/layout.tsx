@@ -15,25 +15,11 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'ISSOP - Smart City Admin Dashboard',
-  description: 'Intelligent Smart City Operations Platform - Managing urban infrastructure efficiently',
-  generator: 'v0.app',
+  title: 'ISSOP - Intelligent Smart City Operations Platform',
+  description: 'Enterprise-grade command and control system for urban infrastructure and field operations management.',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/icon.svg',
+    apple: '/icon.svg',
   },
 }
 

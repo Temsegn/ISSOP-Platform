@@ -5,7 +5,7 @@ import 'package:issop_mobile/core/services/storage_service.dart';
 class SocketService {
   final StorageService _storage;
   io.Socket? _socket;
-  final _rootUrl = 'http://10.0.2.2:3000'; // Standard Android Emulator Localhost
+  final _rootUrl = 'https://issop-platform.onrender.com';
 
   final _eventController = StreamController<SocketEvent>.broadcast();
   Stream<SocketEvent> get events => _eventController.stream;

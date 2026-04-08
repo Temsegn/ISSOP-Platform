@@ -12,7 +12,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Shield,
   UserCog,
   ClipboardList,
 } from 'lucide-react'
@@ -112,12 +111,12 @@ export function DashboardSidebar() {
                 transition={{ duration: 0.2 }}
                 className="flex items-center gap-3"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
-                  <Shield className="h-5 w-5 text-white" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/5">
+                  <img src="/icon.svg" alt="ISSOP Logo" className="h-6 w-6" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-sidebar-foreground">ISSOP</span>
-                  <span className="text-xs text-muted-foreground">Smart City</span>
+                  <span className="text-sm font-semibold text-sidebar-foreground tracking-tight">ISSOP</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Command Center</span>
                 </div>
               </motion.div>
             )}
@@ -127,9 +126,9 @@ export function DashboardSidebar() {
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg gradient-primary"
+              className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/5"
             >
-              <Shield className="h-5 w-5 text-white" />
+              <img src="/icon.svg" alt="ISSOP Logo" className="h-6 w-6" />
             </motion.div>
           )}
         </div>

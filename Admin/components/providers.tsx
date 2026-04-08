@@ -6,6 +6,7 @@ import { store } from '@/store'
 import { useAppDispatch } from '@/store/hooks'
 import { fetchCurrentUser } from '@/store/slices/authSlice'
 import { api } from '@/lib/api'
+import { socketService } from '@/lib/socket'
 import { ThemeProvider } from './theme-provider'
 import { Toaster } from './ui/sonner'
 
@@ -16,6 +17,13 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
     const token = api.getToken()
     if (token) {
       dispatch(fetchCurrentUser())
+      socketService.connect()
+    } else {
+      socketService.disconnect()
+    }
+
+    return () => {
+      socketService.disconnect()
     }
   }, [dispatch])
 
