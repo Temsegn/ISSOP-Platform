@@ -195,7 +195,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2">
           {/* Debug Toggle Button */}
           <button
-            onClick={() => setShowDebug(!showDebug)}
+            onClick={() => setShowDebug(false)}
             className="text-xs px-2 py-1 rounded bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300"
           >
             {showDebug ? 'Hide' : 'Show'} Debug
