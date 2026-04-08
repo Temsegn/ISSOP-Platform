@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Shield, Mail, Lock, ArrowRight, Loader2, Info, Building2, MapPin, Zap } from 'lucide-react'
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
@@ -60,6 +60,85 @@ export default function LoginPage() {
     }
   }
 
+  return (
+    <form onSubmit={handleLogin} className="space-y-6">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Administrative Email</Label>
+          <div className="relative group">
+            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="name@issop.gov"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-10 h-11 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Secure Password</Label>
+            <button type="button" className="text-xs text-primary hover:underline transition-all">
+              Forgot password?
+            </button>
+          </div>
+          <div className="relative group">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10 h-11 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full h-12 rounded-xl gradient-primary text-white font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+        disabled={isLoading}
+      >
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-2"
+            >
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Authenticating...
+            </motion.div>
+          ) : (
+            <motion.div
+              key="login"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-2"
+            >
+              Sign In to Dashboard
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Button>
+    </form>
+  )
+}
+
+export default function LoginPage() {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#0c0d12] flex items-center justify-center p-4">
       {/* Dynamic Animated Background */}
@@ -118,80 +197,17 @@ export default function LoginPage() {
             <p className="text-muted-foreground mt-2">Intelligent Smart City Operations Platform</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Administrative Email</Label>
-                <div className="relative group">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@issop.gov"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-11 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
-                    disabled={isLoading}
-                  />
-                </div>
+          <Suspense fallback={
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="h-20 bg-background/50 rounded-xl animate-pulse" />
+                <div className="h-20 bg-background/50 rounded-xl animate-pulse" />
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Secure Password</Label>
-                  <button type="button" className="text-xs text-primary hover:underline transition-all">
-                    Forgot password?
-                  </button>
-                </div>
-                <div className="relative group">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-11 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl"
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
+              <div className="h-12 bg-primary/20 rounded-xl animate-pulse" />
             </div>
-
-            <Button
-              type="submit"
-              className="w-full h-12 rounded-xl gradient-primary text-white font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] group"
-              disabled={isLoading}
-            >
-              <AnimatePresence mode="wait">
-                {isLoading ? (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center gap-2"
-                  >
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Authenticating...
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="login"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center gap-2"
-                  >
-                    Sign In to Dashboard
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Button>
-          </form>
+          }>
+            <LoginForm />
+          </Suspense>
 
           <div className="mt-8 pt-6 border-t border-border/50 flex flex-col gap-4">
             <div className="flex items-start gap-3 p-3 rounded-xl bg-primary/5 text-xs text-muted-foreground">
